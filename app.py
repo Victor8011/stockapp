@@ -1,11 +1,13 @@
-from ctypes import alignment
 from math import radians
 from sqlite3 import adapt
 from sre_parse import MAXWIDTH
-from tkinter.tix import MAX
 from tracemalloc import start
 import flet as ft
 #from networkx import radius
+
+from add_product_page import AddProductPage
+
+
 
 class Stock:
     def __init__(self, page: ft.Page):
@@ -14,8 +16,12 @@ class Stock:
         self.page.title = "Stock App"
         self.page.vertical_alignment = ft.MainAxisAlignment.START
         self.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+        #self.page.window.width = 1024
+        #self.page.window.height = 768
         self.page.window.min_width = 620
         self.page.window.min_height = 620
+        #self.page.window.center()
+
         # Inicializando os produtos
         self.products = {
             "Eletrônicos": {
@@ -55,6 +61,8 @@ class Stock:
         self.page.padding = ft.Padding(left=0, right=0, top=0, bottom=0)  # Padding em todas as direções
         self.search_text = ""  # Variável para armazenar o texto digitado na busca
         self.table_container = None  # Referência ao container da tabela para atualização dinâmica
+        self.sort_column = None  # Coluna atualmente ordenada
+        self.sort_ascending = True  # Ordem crescente ou decrescente
 
         # Chama main_page após a inicialização
         self.main_page()
@@ -109,7 +117,9 @@ class Stock:
             width=100,
             height=40,
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10)),
+            on_click=self.open_add_product_dialog  # Evento para abrir a nova página
         )
+        
         productsUsedButton = ft.ElevatedButton(
             text="Usados",
             bgcolor="Yellow",
@@ -124,9 +134,75 @@ class Stock:
             spacing=20,
         )
         return row
+    
+    def open_add_product_dialog(self, e):
+        # Cria o diálogo de adicionar produto
+        dialog = AddProductPage(self.page, self.products, self.update_table)
+        self.page.dialog = dialog.dialog  # Define o diálogo na página
+        dialog.dialog.open = True
+        self.page.update()
+
+    def update_table(self):
+        if self.table_container:
+            self.table_container.content = self.products_list()
+            self.table_container.update()
 
     # ---------------------------------------------------------------------
 
+    # def products_list(self):
+    #     # Filtra os produtos com base no texto de busca
+    #     filtered_products = {}
+    #     if self.search_text:
+    #         for cat, items in self.products.items():
+    #             filtered_items = {p: q for p, q in items.items() if self.search_text.lower() in p.lower()}
+    #             if filtered_items:
+    #                 filtered_products[cat] = filtered_items
+    #     else:
+    #         filtered_products = self.products
+
+    #     #Configurando as colunas da tabela
+    #     columns = [
+    #         ft.DataColumn(ft.ElevatedButton("Categoria")),
+    #         ft.DataColumn(ft.ElevatedButton("Produto")),
+    #         ft.DataColumn(ft.ElevatedButton("Quantidade")),
+    #         ft.DataColumn(ft.ElevatedButton("Ações")),
+    #     ]
+        
+    #     # Criando as linhas da tabela
+    #     rows = []
+    #     for cat, items in filtered_products.items():
+    #         for product, quantity in items.items():
+    #             rows.append(
+    #                 ft.DataRow(
+    #                     cells=[
+    #                         ft.DataCell(ft.Text(cat)),
+    #                         ft.DataCell(ft.Text(product)),
+    #                         ft.DataCell(ft.Text(str(quantity))),
+    #                         ft.DataCell(
+    #                             ft.Row(
+    #                                 controls=[
+    #                                     ft.IconButton(icon=ft.Icons.EDIT, icon_color="Blue"),
+    #                                     ft.IconButton(icon=ft.Icons.DELETE, icon_color="Red")
+    #                                 ],
+    #                                 spacing=10
+    #                             )
+    #                         ),
+    #                     ]
+    #                 )
+    #             )
+
+    #     # Retornando a tabela
+    #     return ft.DataTable(
+    #         columns=columns,
+    #         rows=rows,
+    #         border=ft.border.all(1, ft.Colors.GREY_400),  # Adicionando bordas à tabela
+    #         border_radius=10,
+    #         column_spacing=adapt
+    #     )
+        
+    # --------------------------------------------------------------------
+    
+    # Função de ordenação e filtro da tabela
     def products_list(self):
         # Filtra os produtos com base no texto de busca
         filtered_products = {}
@@ -138,44 +214,96 @@ class Stock:
         else:
             filtered_products = self.products
 
-        # Configurando as colunas da tabela
-        columns = [
-            ft.DataColumn(ft.Text("Categoria", weight=ft.FontWeight.BOLD)),
-            ft.DataColumn(ft.Text("Produto", weight=ft.FontWeight.BOLD)),
-            ft.DataColumn(ft.Text("Quantidade", weight=ft.FontWeight.BOLD)),
-            ft.DataColumn(ft.Text("Ações", weight=ft.FontWeight.BOLD)),
-        ]
-
-        # Criando as linhas da tabela
-        rows = []
+        # Converte os produtos em uma lista plana para ordenação
+        flat_list = []
         for cat, items in filtered_products.items():
             for product, quantity in items.items():
-                rows.append(
-                    ft.DataRow(
-                        cells=[
-                            ft.DataCell(ft.Text(cat)),
-                            ft.DataCell(ft.Text(product)),
-                            ft.DataCell(ft.Text(str(quantity))),
-                            ft.DataCell(
-                                ft.Row(
-                                    controls=[
-                                        ft.IconButton(icon=ft.Icons.EDIT, icon_color="Blue"),
-                                        ft.IconButton(icon=ft.Icons.DELETE, icon_color="Red")
-                                    ],
-                                    spacing=10
-                                )
-                            ),
-                        ]
+                flat_list.append({"categoria": cat, "produto": product, "quantidade": quantity})
+
+        # Ordena a lista com base na coluna selecionada
+        if self.sort_column == "Categoria":
+            flat_list.sort(key=lambda x: x["categoria"], reverse=not self.sort_ascending)
+        elif self.sort_column == "Produto":
+            flat_list.sort(key=lambda x: x["produto"], reverse=not self.sort_ascending)
+        elif self.sort_column == "Quantidade":
+            flat_list.sort(key=lambda x: x["quantidade"], reverse=not self.sort_ascending)
+
+        # Função de ordenação ao clicar no botão do cabeçalho
+        def sort_table(e):
+            column_name = e.control.data  # Usa o atributo data para identificar a coluna
+            if self.sort_column == column_name:
+                # Se já está ordenado pela mesma coluna, inverte a ordem
+                self.sort_ascending = not self.sort_ascending
+            else:
+                # Nova coluna, começa com ordem crescente
+                self.sort_column = column_name
+                self.sort_ascending = True
+            self.table_container.content = self.products_list()
+            self.table_container.update()
+
+        # Configurando as colunas da tabela com ElevatedButton
+        columns = [
+            ft.DataColumn(
+                ft.ElevatedButton(
+                    text="Categoria",
+                    data="Categoria",
+                    on_click=sort_table,
+                    style=ft.ButtonStyle(
+                        shape=ft.RoundedRectangleBorder(radius=5),
                     )
                 )
+            ),
+            ft.DataColumn(
+                ft.ElevatedButton(
+                    text="Produto",
+                    data="Produto",
+                    on_click=sort_table,
+                    style=ft.ButtonStyle(
+                        shape=ft.RoundedRectangleBorder(radius=5),
+                    )
+                )
+            ),
+            ft.DataColumn(
+                ft.ElevatedButton(
+                    text="Quantidade",
+                    data="Quantidade",
+                    on_click=sort_table,
+                    style=ft.ButtonStyle(
+                        shape=ft.RoundedRectangleBorder(radius=5),
+                    )
+                )
+            ),
+            ft.DataColumn(ft.Text("Ações", weight=ft.FontWeight.BOLD)),
+        ]
+        
+        # Criando as linhas da tabela
+        rows = []
+        for item in flat_list:
+            rows.append(
+                ft.DataRow(
+                    cells=[
+                        ft.DataCell(ft.Text(item["categoria"])),
+                        ft.DataCell(ft.Text(item["produto"])),
+                        ft.DataCell(ft.Text(str(item["quantidade"]))),
+                        ft.DataCell(
+                            ft.Row(
+                                controls=[
+                                    ft.IconButton(icon=ft.Icons.EDIT, icon_color="Blue"),
+                                    ft.IconButton(icon=ft.Icons.DELETE, icon_color="Red")
+                                ],
+                                spacing=10
+                            )
+                        ),
+                    ]
+                )
+            )
 
-        # Retornando a tabela
         return ft.DataTable(
             columns=columns,
             rows=rows,
-            border=ft.border.all(1, ft.colors.GREY_400),  # Adicionando bordas à tabela
+            border=ft.border.all(1, ft.Colors.GREY_400),
             border_radius=10,
-            column_spacing=adapt
+            column_spacing=25
         )
 
     # ---------------------------------------------------------------------
@@ -183,6 +311,7 @@ class Stock:
     # MAIN PAGE
     def main_page(self):
         self.page.add(self.topBar())
+        self.table_container = ft.Container(content=self.products_list(), expand=True)
         # Container para a tabela, que será atualizado dinamicamente
         self.table_container = ft.Container(
             content=self.products_list(),
