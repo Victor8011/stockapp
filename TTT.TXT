@@ -1,2 +1,0 @@
-
-Ver como deixar uma quantidade máxima de caracteres que pode ser inseridas como categoria e produto (provavelmente será usando SQLite)
