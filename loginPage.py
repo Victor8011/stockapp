@@ -12,9 +12,10 @@ def main(page: ft.Page):
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.window.min_width = 620
-    page.window.min_height = 620
+    page.window.min_height = 900
     page.window.max_width = 620
     page.window.max_height = 1080
+    page.window.wait_until_ready_to_show
     snack_bar = ft.SnackBar(content=ft.Text(""), open=False)
 
     def btn_login(e):
@@ -96,4 +97,4 @@ def main(page: ft.Page):
     page.overlay.append(snack_bar)
     page.add(main_page)
 
-ft.app(target=main, port=8888, view=ft.AppView.WEB_BROWSER)
+ft.app(target=main, assets_dir='assets')

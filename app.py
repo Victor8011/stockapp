@@ -14,39 +14,13 @@ def main(page: ft.Page):
     page.window.min_height = 620
     page.window.max_width = 620
     page.window.max_height = 1080
-    
+
     # Inicializando os produtos
-    products = {
-        "Eletrônicos": {
-            "Smartphone": 50,
-            "Notebook": 30,
-            "Tablet": 20,
-            "Smartwatch": 10,
-            "Fone de Ouvido": 100,
-            "Carregador": 50,
-            "Cabo USB": 200,
-            "Carregador Sem Fio": 30,
-            "PS4": 2000,
-            "PS5": 5000,   
-        },
-        "Alimentos": {
-            "Café": 10000,
-            "Arroz": 100,
-            "Feijão": 80,
-            "Macarrão": 50,
-            "Azeite de Oliva": 20,
-            "Leite em Pó": 30,
-            "Açúcar": 60,
-            "Sal": 40,
-            "Farinha de Trigo": 70,
-            "Ovo": 10000,
-            "Batata": 100,
-            "Farinha": 80,
-        },
-        "Teste": {
-            "test1": 0
-        }
-    }
+    products = {"Eletrônicos": {
+        "Smartphone": 2500.00,
+        "Notebook": 4500.00,
+        "Fone de Ouvido": 200.00
+    }}
 
     page.padding = ft.Padding(left=0, right=0, top=0, bottom=0)
     search_text = ""  # Variável para armazenar o texto digitado na busca
@@ -82,20 +56,23 @@ def main(page: ft.Page):
     def topButtons():
         addButton = ft.ElevatedButton(
             text="Adicionar",
-            bgcolor="Green",
-            color="Black",
+            color=ft.Colors.BLUE_100,
             width=100,
             height=40,
-            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10)),
-            on_click=update_add
+            style=ft.ButtonStyle(
+                shape=ft.RoundedRectangleBorder(radius=10),
+                overlay_color=ft.Colors.GREEN_400,
+            ),
+            on_click=update_add,
         )
         productsUsedButton = ft.ElevatedButton(
             text="Usados",
-            bgcolor="Yellow",
-            color="Black",
+            color=ft.Colors.BLUE_100,
             width=100,
             height=40,
-            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10)),
+            style=ft.ButtonStyle(
+                shape=ft.RoundedRectangleBorder(radius=10),
+                overlay_color=ft.Colors.YELLOW_400),
             on_click=update_used
         )
         row = ft.Row(
@@ -109,7 +86,7 @@ def main(page: ft.Page):
     def products_list():
         nonlocal search_text, sort_column, sort_ascending
         filtered_products = {}
-        
+
         # Se search_text estiver vazio, exibe todos os produtos
         if not search_text:
             filtered_products = products
@@ -149,7 +126,7 @@ def main(page: ft.Page):
             ft.DataColumn(ft.ElevatedButton(text="Quantidade", data="Quantidade", on_click=sort_table, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5)))),
             ft.DataColumn(ft.Text("Ações", weight=ft.FontWeight.BOLD)),
         ]
-        
+
         rows = []
         for item in flat_list:
             rows.append(
@@ -162,7 +139,8 @@ def main(page: ft.Page):
                             ft.Row(
                                 controls=[
                                     ft.IconButton(icon=ft.Icons.EDIT, icon_color="Blue"),
-                                    ft.IconButton(icon=ft.Icons.DELETE, icon_color="Red")
+                                    ft.IconButton(icon=ft.Icons.DELETE, icon_color="Red", data={"categoria": item["categoria"], "produto": item["produto"]},  # data - Passando os dados do produto
+                                        on_click=open_dlg_modal)
                                 ],
                                 spacing=10
                             )
@@ -179,7 +157,60 @@ def main(page: ft.Page):
             column_spacing=50
         )
 
-    # Funções de navegação
+    # Alert Dialog
+    def open_dlg_modal(e):
+        item_data = e.control.data
+        dlg_modal = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("Confirme:"),
+            content=ft.Text(f"Certeza que deseja excluir {item_data['produto']}?"),
+            actions=[
+                ft.TextButton("Sim", data=item_data, on_click=close_dlg_true),
+                ft.TextButton(
+                    "Não",
+                    style=ft.ButtonStyle(color={"": ft.colors.RED}),
+                    on_click=close_dlg_false,
+                ),
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+        page.dialog = dlg_modal  # Define o diálogo como o diálogo ativo da página
+        page.add(dlg_modal)
+        dlg_modal.open = True
+        page.update()
+
+    def close_dlg_true(e):
+        nonlocal products, table_container
+        item_data = e.control.data
+        category = item_data["categoria"]
+        product = item_data["produto"]
+
+        if category in products and product in products[category]:
+            del products[category][product]
+            if not products[category]:
+                del products[category]
+
+        table_container.content = products_list()
+        table_container.update()
+
+        page.dialog.open = False  # Fecha o diálogo ativo
+        page.update()
+
+        page.overlay.append(
+            ft.SnackBar(
+                content=ft.Text(f"{product} removido com sucesso!"),
+                open=True,
+                bgcolor=ft.Colors.GREEN_400,
+                duration=3000,
+            )
+        )
+        page.update()
+
+    def close_dlg_false(e):
+        page.dialog.open = False  # Fecha o diálogo ativo
+        page.update()
+
+    # funções dos buttons
     def update_add(e):
         nonlocal products
         page.clean()
@@ -214,7 +245,7 @@ def main(page: ft.Page):
                             if isinstance(tf, ft.TextField) and tf.hint_text == "Procure um produto":
                                 tf.value = ""
         page.update()
-        
+
     def update_user(e):
         page.clean()
         page.add(topBar())
@@ -267,4 +298,4 @@ def main(page: ft.Page):
     # Iniciar a página principal
     main_page()
 
-#ft.app(target=main, port=8888, view=ft.AppView.WEB_BROWSER)
+ft.app(target=main, assets_dir='assets')
