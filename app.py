@@ -2,6 +2,7 @@ import flet as ft
 import addPage
 import usedPage
 import importlib
+import userPage
 
 def main(page: ft.Page):
     # Configurações iniciais da página
@@ -15,39 +16,37 @@ def main(page: ft.Page):
     page.window.max_height = 1080
     
     # Inicializando os produtos
-    # products = {
-    #     "Eletrônicos": {
-    #         "Smartphone": 50,
-    #         "Notebook": 30,
-    #         "Tablet": 20,
-    #         "Smartwatch": 10,
-    #         "Fone de Ouvido": 100,
-    #         "Carregador": 50,
-    #         "Cabo USB": 200,
-    #         "Carregador Sem Fio": 30,
-    #         "PS4": 2000,
-    #         "PS5": 5000,   
-    #     },
-    #     "Alimentos": {
-    #         "Café": 10000,
-    #         "Arroz": 100,
-    #         "Feijão": 80,
-    #         "Macarrão": 50,
-    #         "Azeite de Oliva": 20,
-    #         "Leite em Pó": 30,
-    #         "Açúcar": 60,
-    #         "Sal": 40,
-    #         "Farinha de Trigo": 70,
-    #         "Ovo": 10000,
-    #         "Batata": 100,
-    #         "Farinha": 80,
-    #     },
-    #     "Teste": {
-    #         "test1": 000
-    #     }
-    # }
-    
-    products = { }
+    products = {
+        "Eletrônicos": {
+            "Smartphone": 50,
+            "Notebook": 30,
+            "Tablet": 20,
+            "Smartwatch": 10,
+            "Fone de Ouvido": 100,
+            "Carregador": 50,
+            "Cabo USB": 200,
+            "Carregador Sem Fio": 30,
+            "PS4": 2000,
+            "PS5": 5000,   
+        },
+        "Alimentos": {
+            "Café": 10000,
+            "Arroz": 100,
+            "Feijão": 80,
+            "Macarrão": 50,
+            "Azeite de Oliva": 20,
+            "Leite em Pó": 30,
+            "Açúcar": 60,
+            "Sal": 40,
+            "Farinha de Trigo": 70,
+            "Ovo": 10000,
+            "Batata": 100,
+            "Farinha": 80,
+        },
+        "Teste": {
+            "test1": 0
+        }
+    }
 
     page.padding = ft.Padding(left=0, right=0, top=0, bottom=0)
     search_text = ""  # Variável para armazenar o texto digitado na busca
@@ -64,7 +63,8 @@ def main(page: ft.Page):
         )
         user_icon = ft.Container(
             content=ft.Icon(name=ft.Icons.PERSON, size=30, color=ft.colors.WHITE),
-            padding=ft.Padding(left=0, right=50, top=0, bottom=0)
+            padding=ft.Padding(left=0, right=50, top=0, bottom=0),
+            on_click=update_user
         )
         top_bar_content = ft.Row(
             controls=[home_icon, user_icon],
@@ -96,7 +96,7 @@ def main(page: ft.Page):
             width=100,
             height=40,
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10)),
-            on_click=update_products
+            on_click=update_used
         )
         row = ft.Row(
             controls=[addButton, productsUsedButton],
@@ -109,13 +109,16 @@ def main(page: ft.Page):
     def products_list():
         nonlocal search_text, sort_column, sort_ascending
         filtered_products = {}
-        if search_text:
+        
+        # Se search_text estiver vazio, exibe todos os produtos
+        if not search_text:
+            filtered_products = products
+        else:
+            # Filtra os produtos com base no texto digitado
             for cat, items in products.items():
                 filtered_items = {p: q for p, q in items.items() if search_text.lower() in p.lower()}
                 if filtered_items:
                     filtered_products[cat] = filtered_items
-        else:
-            filtered_products = products
 
         flat_list = []
         for cat, items in filtered_products.items():
@@ -178,29 +181,46 @@ def main(page: ft.Page):
 
     # Funções de navegação
     def update_add(e):
-        nonlocal products  # Permite acessar a variável products do escopo de main
+        nonlocal products
         page.clean()
-        
         page.add(topBar())
         importlib.reload(addPage)
-        add_page = addPage.AddPage(page, products)  # Passa o dicionário products
+        add_page = addPage.AddPage(page, products)
         add_page.addMainPage()
-        
-    # Funções de navegação
-    def update_products(e):
-        nonlocal products  # Permite acessar a variável products do escopo de main
+
+    def update_used(e):
+        nonlocal products
         page.clean()
-        
         page.add(topBar())
         importlib.reload(usedPage)
-        add_page = usedPage.UsedPage(page, products)  # Passa o dicionário products
-        add_page.addMainPage()
+        used_page = usedPage.UsedPage(page, products)
+        used_page.addMainPage()
 
     def update_home(e):
+        nonlocal search_text, sort_column, sort_ascending, table_container
+        # Zera os filtros
+        search_text = ""  # Limpa o texto de busca
+        sort_column = None  # Remove a ordenação por coluna
+        sort_ascending = True  # Reseta para ordem crescente
+        # Recarrega a página principal
         page.clean()
         main_page()
-
-# ---------------------------------------------------------
+        # Limpa o conteúdo do TextField visualmente
+        for control in page.controls:
+            if isinstance(control, ft.Container):
+                for col in control.content.controls:
+                    if isinstance(col, ft.Row):
+                        for tf in col.controls:
+                            if isinstance(tf, ft.TextField) and tf.hint_text == "Procure um produto":
+                                tf.value = ""
+        page.update()
+        
+    def update_user(e):
+        page.clean()
+        page.add(topBar())
+        importlib.reload(userPage)
+        user_page = userPage.main(page)
+        user_page
 
     # MAIN PAGE
     def main_page():
@@ -239,7 +259,7 @@ def main(page: ft.Page):
 
     def update_search(e):
         nonlocal search_text, table_container
-        search_text = e.control.value
+        search_text = e.control.value.strip()  # Usa strip() para garantir que espaços não interfiram
         if table_container:
             table_container.content = products_list()
             table_container.update()
@@ -247,4 +267,4 @@ def main(page: ft.Page):
     # Iniciar a página principal
     main_page()
 
-ft.app(target=main, port=8888, view=ft.AppView.WEB_BROWSER)
+#ft.app(target=main, port=8888, view=ft.AppView.WEB_BROWSER)

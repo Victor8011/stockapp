@@ -17,7 +17,7 @@ class UsedPage:
         )
 
     def categories_dropdown(self):
-        dropdown = ft.Dropdown(
+        dropdown = ft.DropdownM2(
             label="Selecione uma Categoria",
             width=260,
             border_color=ft.colors.GREY_100,
@@ -28,11 +28,11 @@ class UsedPage:
         return dropdown
 
     def products_dropdown(self):
-        dropdown = ft.Dropdown(
+        dropdown = ft.DropdownM2(
             label="Selecione ou digite um Produto",
             width=260,
             border_color=ft.colors.GREY_100,
-            hint_text="Digite ou selecione um produto",
+            hint_text="Selecionar",
             options=[],
             text_size=15,
             autofocus=True,  # Foco inicial para facilitar a digitação
@@ -49,6 +49,7 @@ class UsedPage:
         else:
             self.dropdown_product.options = []
         self.dropdown_product.value = None  # Limpa o produto ao mudar categoria
+        self.dropdown_product.label = "Selecione um Produto" # retorna a pedir para selecionar um produto
         self.page.update()
 
     def filter_products(self, e):
@@ -109,7 +110,7 @@ class UsedPage:
             return
 
         if not selected_product:
-            self.snack_bar.content.value = "Por favor, selecione ou digite um produto!"
+            self.snack_bar.content.value = "Por favor, selecione um produto!"
             self.snack_bar.bgcolor = ft.colors.ORANGE_300
             self.snack_bar.open = True
             self.page.update()
@@ -163,7 +164,7 @@ class UsedPage:
             content=ft.Column(
                 controls=[
                     ft.Text(
-                        "Registre produtos usados",
+                        "Produtos utilizados",
                         weight=ft.FontWeight.BOLD,
                         text_align=ft.TextAlign.CENTER,
                         size=30,

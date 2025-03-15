@@ -1,5 +1,26 @@
-# Exclui o arquivo add_product_page.py
-add_product_page.py
-
-# Exclui o arquivo TTT.txt
+# Exclui arquivos do src
 TTT.TXT
+KEY.py
+
+#eclui pyvenv.cfg
+pyvenv.cfg
+
+# Arquivos e pastas do ambiente virtual
+venv/
+Include/
+Lib/
+Scripts/
+share/
+storage/
+pyvenv.cfg
+KEY.py
+
+# Outros arquivos comuns em projetos Python/Flet
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+*.log

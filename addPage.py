@@ -73,7 +73,7 @@ class AddPage:
 
     def categories_dropdown(self):
         # Cria o dropdown com base nas chaves do dicionário products
-        return ft.Dropdown(
+        return ft.DropdownM2(
             label="Selecione uma Categoria",
             width=260,
             border_color=ft.colors.GREY_100,
