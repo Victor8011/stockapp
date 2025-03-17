@@ -168,7 +168,7 @@ class UsedPage:
                         weight=ft.FontWeight.BOLD,
                         text_align=ft.TextAlign.CENTER,
                         size=30,
-                        font_family="Arial"
+                        font_family="Consolas"
                     ),
                     self.dropdown_category,
                     self.add_new_product()

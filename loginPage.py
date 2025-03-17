@@ -1,4 +1,6 @@
 import flet as ft
+import time
+import threading
 import requests
 import KEY
 
@@ -12,10 +14,10 @@ def main(page: ft.Page):
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.window.min_width = 620
-    page.window.min_height = 900
-    page.window.max_width = 620
-    page.window.max_height = 1080
-    page.window.wait_until_ready_to_show
+    page.window.min_height = 620
+    page.window.width = 620
+    page.window.height = 620
+    page.window.maximizable = True
     snack_bar = ft.SnackBar(content=ft.Text(""), open=False)
 
     def btn_login(e):
@@ -29,19 +31,19 @@ def main(page: ft.Page):
             }
             response = requests.post(url, json=payload)
             response.raise_for_status()  # Levanta exceção se houver erro HTTP
-            
+
             data = response.json()
             if "idToken" in data:
                 # Salva o email no módulo user_data
                 KEY.user_email = textfield_email.value
-                
+
                 # Limpa a tela e mostra Pagina pós login
                 page.clean()
                 from app import main
                 app_home_page = main(page)
                 app_home_page
-                
-                #Snack bar de sucesso
+
+                # Snack bar de sucesso
                 snack_bar.content=ft.Text("Logado com sucesso!", weight=ft.FontWeight.BOLD)
                 snack_bar.bgcolor = ft.Colors.GREEN_400
                 snack_bar.action="OK"
@@ -65,16 +67,53 @@ def main(page: ft.Page):
             snack_bar.duration=3000
             snack_bar.open = True
             page.update()
-            
-            
+
             textfield_email.value = ""
             textfield_password.value = ""
             page.update()
 
-    # criando elementos do front-end
-    login_text = ft.Text("Login", size=26)
+    # TEXT TITLER STOCKAPP --------
+    login_text = ft.Text(
+        "StockApp",
+        size=30,
+        font_family="Consolas",
+        color="BLACK",
+        weight=ft.FontWeight.BOLD,
+    )
+
+    # Container com gradiente animado
+    gradient_container = ft.Container(
+        content=login_text,
+        padding=10,
+        border_radius=10,
+        gradient=ft.LinearGradient(
+            begin=ft.Alignment(-1, 0),  # Início à esquerda
+            end=ft.Alignment(1, 0),     # Fim à direita
+            colors=[ft.colors.BLUE, ft.Colors.GREEN],
+            stops=[0.0, 1.0],           # Posições iniciais das cores
+            rotation=0,                 # Rotação inicial
+        ),
+        animate_rotation=True,  # Habilita animação na rotação
+    )
+
+    # Função para animar o gradiente
+    def animate_gradient():
+        rotation = 0
+        while True:
+            rotation += 0.2  # Incrementa a rotação
+            if rotation >= 6.28:  # 2π (um ciclo completo)
+                rotation = 0
+            gradient_container.gradient.rotation = rotation
+            page.update()
+            time.sleep(0.05)  # Controla a velocidade da animação
+
+    # Inicia a animação em uma thread separada para não bloquear a UI
+    threading.Thread(target=animate_gradient, daemon=True).start()
+    
+    # ------------------------------
+
     textfield_email = ft.TextField(label="Email", width=300)
-    textfield_password = ft.TextField(label="Password", password=True, width=300)
+    textfield_password = ft.TextField(label="Senha", password=True, width=300)
     confirm_button = ft.ElevatedButton(text="Login", width=100, height=40, on_click=btn_login)
 
     # inserindo elementos criados na pagina
@@ -82,7 +121,7 @@ def main(page: ft.Page):
         expand=False,
         content=ft.Column(
             controls=[
-                login_text,
+                gradient_container,
                 ft.Container(margin=ft.Margin(bottom=30, top=0, left=0, right=0)),
                 textfield_email,
                 textfield_password,
@@ -97,4 +136,4 @@ def main(page: ft.Page):
     page.overlay.append(snack_bar)
     page.add(main_page)
 
-ft.app(target=main, assets_dir='assets')
+ft.app(target=main, assets_dir="assets", view=ft.WEB_BROWSER)

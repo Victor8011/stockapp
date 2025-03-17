@@ -3,6 +3,7 @@ import addPage
 import usedPage
 import importlib
 import userPage
+import addQuantityPage
 
 def main(page: ft.Page):
     # Configurações iniciais da página
@@ -12,8 +13,25 @@ def main(page: ft.Page):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.window.min_width = 620
     page.window.min_height = 620
-    page.window.max_width = 620
-    page.window.max_height = 1080
+    page.window.width = 620
+    page.window.height = 620
+    page.window.maximizable = True
+
+    # Função para determinar o spacing da DataTable
+    def get_spacing():
+        if page.window.width <= 425:  # Celulares menores
+            return 11
+        return 60  # Padrão para telas maiores
+
+    # Atualiza o spacing quando a janela é redimensionada
+    def on_resize(e):
+        nonlocal table_container
+        if table_container and isinstance(table_container.content, ft.DataTable):
+            table_container.content.column_spacing = get_spacing()
+            table_container.update()
+        page.update()
+
+    page.on_resized = on_resize
 
     # Inicializando os produtos
     products = {"Eletrônicos": {
@@ -31,23 +49,45 @@ def main(page: ft.Page):
     # Barra superior
     def topBar():
         home_icon = ft.Container(
-            content=ft.Icon(name=ft.Icons.HOME, size=30, color=ft.colors.WHITE),
-            padding=ft.Padding(left=50, right=0, top=0, bottom=0),
-            on_click=update_home
+            content=ft.TextButton(
+                content=ft.Row(
+                    controls=[
+                        ft.Icon(ft.icons.HOME_OUTLINED, size=30, color="GREEN"),
+                        ft.Text("HOME", size=12, color="WHITE"),  # Cor ajustada para visibilidade
+                    ],
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,  # Centraliza verticalmente
+                    spacing=5,  # Espaço entre ícone e texto
+                ),
+                on_click=update_home
+            ),
+            padding=ft.Padding(left=20, right=0, top=10, bottom=0),
         )
+
         user_icon = ft.Container(
-            content=ft.Icon(name=ft.Icons.PERSON, size=30, color=ft.colors.WHITE),
-            padding=ft.Padding(left=0, right=50, top=0, bottom=0),
-            on_click=update_user
+            content=ft.TextButton(
+                content=ft.Row(
+                    controls=[
+                        ft.Icon(ft.icons.PERSON_OUTLINE, size=30, color="GREEN"),
+                        ft.Text("USER", size=12, color="WHITE"),
+                    ],
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=5,
+                ),
+                on_click=update_user,  # Substitua por update_user
+            ),
+            padding=ft.Padding(left=5, right=0, top=10, bottom=0),
         )
+        
+        exit_icon = ft.Container()
+
         top_bar_content = ft.Row(
             controls=[home_icon, user_icon],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             expand=True,
+            spacing=20,
         )
+
         top_bar = ft.Container(
             content=top_bar_content,
-            bgcolor=ft.colors.BLUE_300,
             height=40,
         )
         return top_bar
@@ -55,7 +95,7 @@ def main(page: ft.Page):
     # Botões do topo: Adicionar e Usados
     def topButtons():
         addButton = ft.ElevatedButton(
-            text="Adicionar",
+            text="Criar",
             color=ft.Colors.BLUE_100,
             width=100,
             height=40,
@@ -124,7 +164,7 @@ def main(page: ft.Page):
             ft.DataColumn(ft.ElevatedButton(text="Categoria", data="Categoria", on_click=sort_table, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5)))),
             ft.DataColumn(ft.ElevatedButton(text="Produto", data="Produto", on_click=sort_table, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5)))),
             ft.DataColumn(ft.ElevatedButton(text="Quantidade", data="Quantidade", on_click=sort_table, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5)))),
-            ft.DataColumn(ft.Text("Ações", weight=ft.FontWeight.BOLD)),
+            ft.DataColumn(ft.Text("Editar")),
         ]
 
         rows = []
@@ -138,11 +178,28 @@ def main(page: ft.Page):
                         ft.DataCell(
                             ft.Row(
                                 controls=[
-                                    ft.IconButton(icon=ft.Icons.EDIT, icon_color="Blue"),
-                                    ft.IconButton(icon=ft.Icons.DELETE, icon_color="Red", data={"categoria": item["categoria"], "produto": item["produto"]},  # data - Passando os dados do produto
-                                        on_click=open_dlg_modal)
+                                    ft.IconButton(
+                                        icon=ft.Icons.ADD_CIRCLE_OUTLINE,
+                                        icon_color="BLUE",
+                                        icon_size=20,
+                                        data={
+                                            "categoria": item["categoria"],
+                                            "produto": item["produto"],
+                                        },  # Passa os dadosdo produto,
+                                        on_click=update_add_quantity,
+                                    ),
+                                    ft.IconButton(
+                                        icon=ft.Icons.DELETE,
+                                        icon_color="Red",
+                                        icon_size=20,
+                                        data={
+                                            "categoria": item["categoria"],
+                                            "produto": item["produto"],
+                                        },  # data - Passando os dados do produto
+                                        on_click=open_dlg_modal,
+                                    ),
                                 ],
-                                spacing=10
+                                spacing=10,
                             )
                         ),
                     ]
@@ -154,10 +211,10 @@ def main(page: ft.Page):
             rows=rows,
             border=ft.border.all(1, ft.colors.GREY_400),
             border_radius=10,
-            column_spacing=50
+            column_spacing=get_spacing()
         )
 
-    # Alert Dialog
+    # Alert Dialog to delete buttom
     def open_dlg_modal(e):
         item_data = e.control.data
         dlg_modal = ft.AlertDialog(
@@ -165,10 +222,11 @@ def main(page: ft.Page):
             title=ft.Text("Confirme:"),
             content=ft.Text(f"Certeza que deseja excluir {item_data['produto']}?"),
             actions=[
-                ft.TextButton("Sim", data=item_data, on_click=close_dlg_true),
+                ft.TextButton("Sim",
+                    style=ft.ButtonStyle(color={"": ft.colors.RED}),
+                    data=item_data, on_click=close_dlg_true),
                 ft.TextButton(
                     "Não",
-                    style=ft.ButtonStyle(color={"": ft.colors.RED}),
                     on_click=close_dlg_false,
                 ),
             ],
@@ -209,6 +267,20 @@ def main(page: ft.Page):
     def close_dlg_false(e):
         page.dialog.open = False  # Fecha o diálogo ativo
         page.update()
+
+    def update_add_quantity(e):
+        nonlocal products, table_container
+        item_data = e.control.data  # Pega os dados do botão clicado
+        category = item_data["categoria"]
+        product = item_data["produto"]
+        page.clean()
+        page.add(topBar())
+        importlib.reload(addQuantityPage)  # Recarrega o módulo para evitar cache
+        add_quantity = addQuantityPage.AddQuantity(page, products, category, product)
+        add_quantity.addMainPage()
+        # Atualiza a tabela ao voltar (opcional)
+        table_container.content = products_list()
+        table_container.update()
 
     # funções dos buttons
     def update_add(e):
@@ -298,4 +370,4 @@ def main(page: ft.Page):
     # Iniciar a página principal
     main_page()
 
-ft.app(target=main, assets_dir='assets')
+ft.app(target=main, assets_dir="assets", view=ft.WEB_BROWSER, port=8550)

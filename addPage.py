@@ -205,7 +205,7 @@ class AddPage:
                         weight=ft.FontWeight.BOLD,
                         text_align=ft.TextAlign.CENTER,
                         size=30,
-                        font_family="Arial"
+                        font_family="Consolas"
                     ),
                     self.add_new_category(),
                     self.dropdown,

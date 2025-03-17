@@ -6,13 +6,9 @@ import KEY  # Presumo que KEY.user_email esteja definido neste módulo
 def main(page: ft.Page):
     page.vertical_alignment = ft.MainAxisAlignment.START
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-    page.window.min_width = 620
-    page.window.min_height = 620
-    page.window.max_width = 620
-    page.window.max_height = 1080
 
     # Caminho da pasta assets
-    pasta_assets = "assets"
+    pasta_assets = "assets/user"
 
     # Função para limpar a pasta assets
     def limpar_pasta_assets():
@@ -68,7 +64,7 @@ def main(page: ft.Page):
 
     # Botão para abrir o seletor de arquivos
     select_image_btn = ft.ElevatedButton(
-        text="adicionar foto",
+        text="alterar foto",
         on_click=lambda e: file_picker.pick_files(
             allow_multiple=False,
             allowed_extensions=["jpg", "png", "jpeg"]
