@@ -26,7 +26,14 @@ class AddQuantity:
             elevation=8,
             duration=3000,
         )
-        
+        # Definir quantity_only como atributo da classe
+        self.quantity_only = ft.Text(
+            value=f"{self.products[self.category][self.product]}",
+            size=15,
+            weight=ft.FontWeight.BOLD,
+            color=ft.colors.YELLOW_900,
+        )
+
     def confirm_product(self, e):
         quantity = self.quantity_field.value.strip()
 
@@ -51,6 +58,10 @@ class AddQuantity:
         self.products[self.category][self.product] += quantity_int
         self.quantity_field.value = ""  # Limpa o campo
 
+        # Atualiza o valor de quantity_only na tela
+        self.quantity_only.value = f"{self.products[self.category][self.product]}"
+        self.quantity_only.update()  # Atualiza o controle na interfac
+
         self.snack_bar.content.value = f"{quantity_int} unidade(s) adicionada(s) a '{self.product}' em '{self.category}'!"
         self.snack_bar.bgcolor = ft.colors.GREEN_400
         self.snack_bar.open = True
@@ -58,21 +69,17 @@ class AddQuantity:
 
     def addMainPage(self):
         # TextButtons para exibir categoria, produto e quantidade atual (não editáveis)
-        category_display = ft.Text(value=f"{self.category}:", size=16, color=ft.colors.GREY_100)
-
-        product_display = ft.Text(value=f"{self.product}", size=16, color=ft.colors.GREY_100)
-        
+        category_display = ft.Text(value=f"{self.category}:", size=16)
+        product_display = ft.Text(value=f"{self.product}", size=16)  
         quantity_display = ft.Text(value="Quantidade atual:", size=16,)
-
-        quantity_only = ft.Text(value=f"{self.products[self.category][self.product]}", size=16, color=ft.colors.YELLOW)
 
         cat_product_row = ft.Row(
             controls=[category_display, product_display],
             alignment=ft.MainAxisAlignment.CENTER,
         )
-        
+
         quantity_row = ft.Row(
-            controls=[quantity_display, quantity_only],
+            controls=[quantity_display, self.quantity_only],
             alignment=ft.MainAxisAlignment.CENTER,
         )
 

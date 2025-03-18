@@ -29,9 +29,9 @@ def main(page: ft.Page):
         return '/user.png'  # Imagem padrão caso não haja nada em assets
 
     wellcome = ft.Text(
-        "Seu Usuário Stock APP",
-        font_family="Arial",
-        size=20, 
+        "Seu Usuário StockApp",
+        font_family="Consolas",
+        size=30, 
         weight="bold"
     )
 

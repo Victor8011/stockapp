@@ -4,12 +4,13 @@ import usedPage
 import importlib
 import userPage
 import addQuantityPage
-#import loginPage
+# import loginPage
 
 def main(page: ft.Page):
     # Configurações iniciais da página
     page.scroll = "adaptive"
     page.title = "Stock App"
+    page.theme_mode = ft.ThemeMode.LIGHT
     page.vertical_alignment = ft.MainAxisAlignment.START
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.window.min_width = 620
@@ -47,6 +48,26 @@ def main(page: ft.Page):
     sort_column = None  # Coluna atualmente ordenada
     sort_ascending = True  # Ordem crescente ou decrescente
 
+    # Mudar o tema.
+    def change_theme(e):
+        if page.theme_mode == ft.ThemeMode.LIGHT:
+            page.theme_mode = ft.ThemeMode.DARK
+            print('Escuro')
+        else:
+            page.theme_mode = ft.ThemeMode.LIGHT
+            print('Claro')
+        # page.clean()
+        # main_page()
+        page.update()
+
+    # Mudar a cor da fonte
+    def color_font_change():
+        if page.theme_mode == ft.ThemeMode.LIGHT:
+            color=ft.Colors.BLUE_900
+        else: 
+            color=ft.Colors.GREY_100
+        return color
+
     # Barra superior
     def topBar():
         home_icon = ft.Container(
@@ -54,7 +75,7 @@ def main(page: ft.Page):
                 content=ft.Row(
                     controls=[
                         ft.Icon(ft.icons.HOME_OUTLINED, size=30, color="GREEN"),
-                        ft.Text("HOME", size=12, color="WHITE"),  # Cor ajustada para visibilidade
+                        ft.Text("HOME", size=12, color=color_font_change),  # Cor ajustada para visibilidade
                     ],
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,  # Centraliza verticalmente
                     spacing=5,  # Espaço entre ícone e texto
@@ -69,7 +90,7 @@ def main(page: ft.Page):
                 content=ft.Row(
                     controls=[
                         ft.Icon(ft.icons.PERSON_OUTLINE, size=30, color="GREEN"),
-                        ft.Text("USER", size=12, color="WHITE"),
+                        ft.Text("USER", size=12, color=color_font_change),
                     ],
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
                     spacing=5,
@@ -79,12 +100,26 @@ def main(page: ft.Page):
             padding=ft.Padding(left=5, right=0, top=10, bottom=0),
         )
 
+        changeTheme_icon = ft.Container(
+            content=ft.TextButton(
+                content=ft.Row(
+                    controls=[
+                        ft.Icon(ft.Icons.LIGHTBULB_OUTLINE, size=22),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    spacing=5,
+                ),
+                on_click=change_theme,
+            ),
+            padding=ft.Padding(left=0, right=15, top=10, bottom=0),
+        )
+
         exit_icon = ft.Container(
             content=ft.TextButton(
                 content=ft.Row(
                     controls=[
                         ft.Icon(ft.icons.EXIT_TO_APP, size=30, color="GREY_200"),
-                        ft.Text("EXIT", size=12, color="WHITE"),
+                        ft.Text("EXIT", size=12, color=color_font_change),
                     ],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     spacing=5,
@@ -98,7 +133,7 @@ def main(page: ft.Page):
             content=ft.Row(
                 controls=[
                     ft.Row(
-                        controls=[home_icon, user_icon],
+                        controls=[home_icon, user_icon, changeTheme_icon],
                         spacing=20
                     ),
                     exit_icon
@@ -119,7 +154,7 @@ def main(page: ft.Page):
     def topButtons():
         addButton = ft.ElevatedButton(
             text="Criar",
-            color=ft.Colors.BLUE_100,
+            color=color_font_change,
             width=100,
             height=40,
             style=ft.ButtonStyle(
@@ -130,7 +165,7 @@ def main(page: ft.Page):
         )
         productsUsedButton = ft.ElevatedButton(
             text="Usados",
-            color=ft.Colors.BLUE_100,
+            color=color_font_change,
             width=100,
             height=40,
             style=ft.ButtonStyle(
@@ -391,3 +426,5 @@ def main(page: ft.Page):
 
     # Iniciar a página principal
     main_page()
+
+ft.app(target=main, assets_dir="assets")

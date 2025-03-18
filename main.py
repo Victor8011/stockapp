@@ -1,9 +1,7 @@
-import tomllib
 import flet as ft
 import time
 import threading
 import requests
-import toml
 import KEY
 import app
 
@@ -22,13 +20,6 @@ def main(page: ft.Page):
     page.window.height = 620
     page.window.maximizable = True
     snack_bar = ft.SnackBar(content=ft.Text(""), open=False)
-    
-    # def load_toml() -> dict:
-    #     # Carrega o arquivo TOML e retorna um dicionário com os dados
-    #     # ...
-    #     with open("config.toml", "r") as file:
-    #         toml_data = dict = tomllib.load(file)
-    #         return toml_data
 
     def btn_login(e):
         try:
@@ -144,4 +135,4 @@ def main(page: ft.Page):
     page.overlay.append(snack_bar)
     page.add(main_page)
 
-ft.app(target=main, assets_dir="assets", view=ft.WEB_BROWSER)
+ft.app(target=main, assets_dir="assets")
