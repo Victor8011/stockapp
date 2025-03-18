@@ -26,7 +26,7 @@ class AddQuantity:
             elevation=8,
             duration=3000,
         )
-
+        
     def confirm_product(self, e):
         quantity = self.quantity_field.value.strip()
 
@@ -115,5 +115,3 @@ class AddQuantity:
         self.page.overlay.append(self.snack_bar)
         self.page.add(main_content)
         self.page.update()
-
-#ft.app(target=lambda page: AddQuantity(page, {"Eletrônicos": {"Smartphone": 2500}}, "Eletrônicos", "Smartphone").addMainPage())

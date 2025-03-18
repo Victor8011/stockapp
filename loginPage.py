@@ -1,8 +1,11 @@
+import tomllib
 import flet as ft
 import time
 import threading
 import requests
+import toml
 import KEY
+import app
 
 # console.firebase.google.com para pegar API KEY
 # install request: pip install requests
@@ -19,6 +22,13 @@ def main(page: ft.Page):
     page.window.height = 620
     page.window.maximizable = True
     snack_bar = ft.SnackBar(content=ft.Text(""), open=False)
+    
+    # def load_toml() -> dict:
+    #     # Carrega o arquivo TOML e retorna um dicionário com os dados
+    #     # ...
+    #     with open("config.toml", "r") as file:
+    #         toml_data = dict = tomllib.load(file)
+    #         return toml_data
 
     def btn_login(e):
         try:
@@ -37,12 +47,6 @@ def main(page: ft.Page):
                 # Salva o email no módulo user_data
                 KEY.user_email = textfield_email.value
 
-                # Limpa a tela e mostra Pagina pós login
-                page.clean()
-                from app import main
-                app_home_page = main(page)
-                app_home_page
-
                 # Snack bar de sucesso
                 snack_bar.content=ft.Text("Logado com sucesso!", weight=ft.FontWeight.BOLD)
                 snack_bar.bgcolor = ft.Colors.GREEN_400
@@ -50,6 +54,10 @@ def main(page: ft.Page):
                 snack_bar.action_color = ft.Colors.BLACK87
                 snack_bar.duration=3000
                 snack_bar.open = True
+                
+                # Limpa a tela e mostra Pagina pós login
+                page.clean()
+                app.main(page)
                 page.update()
 
             else:
@@ -109,7 +117,7 @@ def main(page: ft.Page):
 
     # Inicia a animação em uma thread separada para não bloquear a UI
     threading.Thread(target=animate_gradient, daemon=True).start()
-    
+
     # ------------------------------
 
     textfield_email = ft.TextField(label="Email", width=300)

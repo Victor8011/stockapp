@@ -4,6 +4,7 @@ import usedPage
 import importlib
 import userPage
 import addQuantityPage
+#import loginPage
 
 def main(page: ft.Page):
     # Configurações iniciais da página
@@ -60,7 +61,7 @@ def main(page: ft.Page):
                 ),
                 on_click=update_home
             ),
-            padding=ft.Padding(left=20, right=0, top=10, bottom=0),
+            padding=ft.Padding(left=15, right=0, top=10, bottom=0),
         )
 
         user_icon = ft.Container(
@@ -77,13 +78,35 @@ def main(page: ft.Page):
             ),
             padding=ft.Padding(left=5, right=0, top=10, bottom=0),
         )
-        
-        exit_icon = ft.Container()
 
-        top_bar_content = ft.Row(
-            controls=[home_icon, user_icon],
-            expand=True,
-            spacing=20,
+        exit_icon = ft.Container(
+            content=ft.TextButton(
+                content=ft.Row(
+                    controls=[
+                        ft.Icon(ft.icons.EXIT_TO_APP, size=30, color="GREY_200"),
+                        ft.Text("EXIT", size=12, color="WHITE"),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    spacing=5,
+                ),
+                on_click=lambda e: page.window.close()
+            ),
+            padding=ft.Padding(left=0, right=15, top=10, bottom=0),
+        )
+
+        top_bar_content = ft.Container(
+            content=ft.Row(
+                controls=[
+                    ft.Row(
+                        controls=[home_icon, user_icon],
+                        spacing=20
+                    ),
+                    exit_icon
+                ],
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,  # Empurra EXIT para a direita
+                expand=True,
+                spacing=20,
+            )
         )
 
         top_bar = ft.Container(
@@ -273,14 +296,12 @@ def main(page: ft.Page):
         item_data = e.control.data  # Pega os dados do botão clicado
         category = item_data["categoria"]
         product = item_data["produto"]
+
         page.clean()
         page.add(topBar())
         importlib.reload(addQuantityPage)  # Recarrega o módulo para evitar cache
         add_quantity = addQuantityPage.AddQuantity(page, products, category, product)
         add_quantity.addMainPage()
-        # Atualiza a tabela ao voltar (opcional)
-        table_container.content = products_list()
-        table_container.update()
 
     # funções dos buttons
     def update_add(e):
@@ -310,12 +331,13 @@ def main(page: ft.Page):
         main_page()
         # Limpa o conteúdo do TextField visualmente
         for control in page.controls:
-            if isinstance(control, ft.Container):
-                for col in control.content.controls:
-                    if isinstance(col, ft.Row):
-                        for tf in col.controls:
+            if isinstance(control, ft.Container) and isinstance(control.content, ft.Column):
+                for col_control in control.content.controls:
+                    if isinstance(col_control, ft.Row):
+                        for tf in col_control.controls:
                             if isinstance(tf, ft.TextField) and tf.hint_text == "Procure um produto":
                                 tf.value = ""
+                                break 
         page.update()
 
     def update_user(e):
@@ -369,5 +391,3 @@ def main(page: ft.Page):
 
     # Iniciar a página principal
     main_page()
-
-ft.app(target=main, assets_dir="assets", view=ft.WEB_BROWSER, port=8550)
