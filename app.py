@@ -4,20 +4,14 @@ import usedPage
 import importlib
 import userPage
 import addQuantityPage
-# import loginPage
+import appVersionUpdate
+import sqlite3
 
 def main(page: ft.Page):
     # Configurações iniciais da página
     page.scroll = "adaptive"
     page.title = "Stock App"
     page.theme_mode = ft.ThemeMode.LIGHT
-    page.vertical_alignment = ft.MainAxisAlignment.START
-    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-    page.window.min_width = 620
-    page.window.min_height = 620
-    page.window.width = 620
-    page.window.height = 620
-    page.window.maximizable = True
 
     # Função para determinar o spacing da DataTable
     def get_spacing():
@@ -34,21 +28,15 @@ def main(page: ft.Page):
         page.update()
 
     page.on_resized = on_resize
-
-    # Inicializando os produtos
-    products = {"Eletrônicos": {
-        "Smartphone": 2500.00,
-        "Notebook": 4500.00,
-        "Fone de Ouvido": 200.00
-    }}
+    
+    search_text = ft.TextField(label="Pesquisar produto...", on_change=lambda e: update_table())
+    sort_column = None
+    sort_ascending = True
 
     page.padding = ft.Padding(left=0, right=0, top=0, bottom=0)
-    search_text = ""  # Variável para armazenar o texto digitado na busca
     table_container = None  # Referência ao container da tabela
-    sort_column = None  # Coluna atualmente ordenada
-    sort_ascending = True  # Ordem crescente ou decrescente
 
-    # Mudar o tema.
+    # Mudar o tema
     def change_theme(e):
         if page.theme_mode == ft.ThemeMode.LIGHT:
             page.theme_mode = ft.ThemeMode.DARK
@@ -56,17 +44,14 @@ def main(page: ft.Page):
         else:
             page.theme_mode = ft.ThemeMode.LIGHT
             print('Claro')
-        # page.clean()
-        # main_page()
         page.update()
 
     # Mudar a cor da fonte
     def color_font_change():
         if page.theme_mode == ft.ThemeMode.LIGHT:
-            color=ft.Colors.BLUE_900
+            return ft.Colors.BLUE_900
         else: 
-            color=ft.Colors.GREY_100
-        return color
+            return ft.Colors.GREY_100
 
     # Barra superior
     def topBar():
@@ -75,10 +60,10 @@ def main(page: ft.Page):
                 content=ft.Row(
                     controls=[
                         ft.Icon(ft.icons.HOME_OUTLINED, size=30, color="GREEN"),
-                        ft.Text("HOME", size=12, color=color_font_change),  # Cor ajustada para visibilidade
+                        ft.Text("HOME", size=12, color=color_font_change),
                     ],
-                    vertical_alignment=ft.CrossAxisAlignment.CENTER,  # Centraliza verticalmente
-                    spacing=5,  # Espaço entre ícone e texto
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=5,
                 ),
                 on_click=update_home
             ),
@@ -95,7 +80,7 @@ def main(page: ft.Page):
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
                     spacing=5,
                 ),
-                on_click=update_user,  # Substitua por update_user
+                on_click=update_user,
             ),
             padding=ft.Padding(left=5, right=0, top=10, bottom=0),
         )
@@ -104,7 +89,7 @@ def main(page: ft.Page):
             content=ft.TextButton(
                 content=ft.Row(
                     controls=[
-                        ft.Icon(ft.Icons.LIGHTBULB_OUTLINE, size=22),
+                        ft.Icon(ft.icons.LIGHTBULB_OUTLINE, size=22),
                     ],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     spacing=5,
@@ -118,7 +103,7 @@ def main(page: ft.Page):
             content=ft.TextButton(
                 content=ft.Row(
                     controls=[
-                        ft.Icon(ft.icons.EXIT_TO_APP, size=30, color="GREY_200"),
+                        ft.Icon(ft.icons.EXIT_TO_APP, size=22, color="GREY_200"),
                         ft.Text("EXIT", size=12, color=color_font_change),
                     ],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -128,17 +113,32 @@ def main(page: ft.Page):
             ),
             padding=ft.Padding(left=0, right=15, top=10, bottom=0),
         )
+        
+        update_icon = ft.Container(
+            content=ft.TextButton(
+                content=ft.Row(
+                    controls=[
+                        ft.Icon(ft.icons.UPDATE_OUTLINED, size=22, color="GREY_200"),
+                        ft.Text("", size=12, color=color_font_change),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    spacing=5,
+                ),
+                on_click=update_version
+            ),
+            padding=ft.Padding(left=0, right=15, top=10, bottom=0),
+        )
 
         top_bar_content = ft.Container(
             content=ft.Row(
                 controls=[
                     ft.Row(
-                        controls=[home_icon, user_icon, changeTheme_icon],
+                        controls=[home_icon, user_icon, changeTheme_icon, update_icon],
                         spacing=20
                     ),
                     exit_icon
                 ],
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,  # Empurra EXIT para a direita
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                 expand=True,
                 spacing=20,
             )
@@ -180,80 +180,69 @@ def main(page: ft.Page):
         )
         return row
 
-    # Função de ordenação e filtro da tabela
-    def products_list():
-        nonlocal search_text, sort_column, sort_ascending
-        filtered_products = {}
-
-        # Se search_text estiver vazio, exibe todos os produtos
-        if not search_text:
-            filtered_products = products
-        else:
-            # Filtra os produtos com base no texto digitado
-            for cat, items in products.items():
-                filtered_items = {p: q for p, q in items.items() if search_text.lower() in p.lower()}
-                if filtered_items:
-                    filtered_products[cat] = filtered_items
-
-        flat_list = []
-        for cat, items in filtered_products.items():
-            for product, quantity in items.items():
-                flat_list.append({"categoria": cat, "produto": product, "quantidade": quantity})
-
-        if sort_column == "Categoria":
-            flat_list.sort(key=lambda x: x["categoria"], reverse=not sort_ascending)
-        elif sort_column == "Produto":
-            flat_list.sort(key=lambda x: x["produto"], reverse=not sort_ascending)
-        elif sort_column == "Quantidade":
-            flat_list.sort(key=lambda x: x["quantidade"], reverse=not sort_ascending)
-
-        def sort_table(e):
-            nonlocal sort_column, sort_ascending
-            column_name = e.control.data
-            if sort_column == column_name:
-                sort_ascending = not sort_ascending
-            else:
-                sort_column = column_name
-                sort_ascending = True
-            table_container.content = products_list()
-            table_container.update()
-
-        columns = [
-            ft.DataColumn(ft.ElevatedButton(text="Categoria", data="Categoria", on_click=sort_table, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5)))),
-            ft.DataColumn(ft.ElevatedButton(text="Produto", data="Produto", on_click=sort_table, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5)))),
-            ft.DataColumn(ft.ElevatedButton(text="Quantidade", data="Quantidade", on_click=sort_table, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5)))),
-            ft.DataColumn(ft.Text("Editar")),
-        ]
-
-        rows = []
-        for item in flat_list:
-            rows.append(
+    # Função para buscar dados do banco de dados
+    def get_data(search_text="", sort_column=None, sort_ascending=True):
+        conexao = sqlite3.connect("tb_products.db")
+        cursor = conexao.cursor()
+        
+        query = "SELECT category, product, quantity FROM products"
+        params = []
+        
+        if search_text:
+            query += " WHERE (category LIKE ? OR product LIKE ?)"
+            params.extend([f"%{search_text}%", f"%{search_text}%"])
+        
+        if sort_column:
+            query += f" ORDER BY {sort_column} {'ASC' if sort_ascending else 'DESC'}"
+        
+        cursor.execute(query, params)
+        tb_data = cursor.fetchall()
+        
+        conexao.close()
+        return tb_data
+    
+    data_table = ft.DataTable(
+        columns=[
+            ft.DataColumn(ft.Text("Categoria"), on_sort=lambda e: order_table("category")),
+            ft.DataColumn(ft.Text("Produto"), on_sort=lambda e: order_table("product")),
+            ft.DataColumn(ft.Text("Quantidade"), on_sort=lambda e: order_table("quantity")),
+            ft.DataColumn(ft.Text("Ações", color=ft.Colors.GREEN_400)),
+        ],
+        rows=[],
+        border=ft.border.all(1, ft.colors.GREY_500),
+        border_radius=10,
+        column_spacing=get_spacing()
+    )
+    
+    # Atualiza a tabela com base no filtro de pesquisa e ordenação
+    def update_table():
+        nonlocal data_table
+        data_table.rows.clear()
+        
+        dados = get_data(search_text.value, sort_column, sort_ascending)
+        
+        for category, product, quantity in dados:
+            data_table.rows.append(
                 ft.DataRow(
                     cells=[
-                        ft.DataCell(ft.Text(item["categoria"])),
-                        ft.DataCell(ft.Text(item["produto"])),
-                        ft.DataCell(ft.Text(str(item["quantidade"]))),
+                        ft.DataCell(ft.Text(category)),
+                        ft.DataCell(ft.Text(product)),
+                        ft.DataCell(ft.Text(str(quantity))),
                         ft.DataCell(
                             ft.Row(
                                 controls=[
                                     ft.IconButton(
-                                        icon=ft.Icons.ADD_CIRCLE_OUTLINE,
-                                        icon_color="BLUE",
+                                        icon=ft.icons.ADD_CIRCLE_OUTLINE,
+                                        icon_color=ft.Colors.BLUE_400,
                                         icon_size=20,
-                                        data={
-                                            "categoria": item["categoria"],
-                                            "produto": item["produto"],
-                                        },  # Passa os dadosdo produto,
+                                        data={"category": category, "product": product},
                                         on_click=update_add_quantity,
                                     ),
                                     ft.IconButton(
-                                        icon=ft.Icons.DELETE,
-                                        icon_color="Red",
+                                        icon=ft.icons.DELETE_OUTLINED,
+                                        icon_color=ft.Colors.RED_400,
                                         icon_size=20,
-                                        data={
-                                            "categoria": item["categoria"],
-                                            "produto": item["produto"],
-                                        },  # data - Passando os dados do produto
+                                        data={"category": category, "product": product},
                                         on_click=open_dlg_modal,
                                     ),
                                 ],
@@ -263,116 +252,107 @@ def main(page: ft.Page):
                     ]
                 )
             )
+        # Só atualiza o table_container se ele já estiver na página
+        if table_container and table_container in page.controls:
+            table_container.content = data_table
+            table_container.update()
+        page.update()
 
-        return ft.DataTable(
-            columns=columns,
-            rows=rows,
-            border=ft.border.all(1, ft.colors.GREY_400),
-            border_radius=10,
-            column_spacing=get_spacing()
-        )
+    # Ordenar a tabela quando um cabeçalho for clicado
+    def order_table(db_column):
+        nonlocal sort_column, sort_ascending
+        if sort_column == db_column:
+            sort_ascending = not sort_ascending
+        else:
+            sort_column = db_column
+            sort_ascending = True
+        update_table()
 
-    # Alert Dialog to delete buttom
+    # Alert Dialog para exclusão
     def open_dlg_modal(e):
         item_data = e.control.data
         dlg_modal = ft.AlertDialog(
             modal=True,
             title=ft.Text("Confirme:"),
-            content=ft.Text(f"Certeza que deseja excluir {item_data['produto']}?"),
+            content=ft.Text(f"Certeza que deseja excluir {item_data['product']}?"),
             actions=[
                 ft.TextButton("Sim",
                     style=ft.ButtonStyle(color={"": ft.colors.RED}),
                     data=item_data, on_click=close_dlg_true),
-                ft.TextButton(
-                    "Não",
-                    on_click=close_dlg_false,
-                ),
+                ft.TextButton("Não", on_click=close_dlg_false),
             ],
             actions_alignment=ft.MainAxisAlignment.END,
         )
-        page.dialog = dlg_modal  # Define o diálogo como o diálogo ativo da página
+        page.dialog = dlg_modal
         page.add(dlg_modal)
         dlg_modal.open = True
         page.update()
 
     def close_dlg_true(e):
-        nonlocal products, table_container
+        nonlocal data_table
         item_data = e.control.data
-        category = item_data["categoria"]
-        product = item_data["produto"]
-
-        if category in products and product in products[category]:
-            del products[category][product]
-            if not products[category]:
-                del products[category]
-
-        table_container.content = products_list()
-        table_container.update()
-
-        page.dialog.open = False  # Fecha o diálogo ativo
+        category = item_data["category"]
+        product = item_data["product"]
+        
+        conexao = sqlite3.connect("tb_products.db")
+        cursor = conexao.cursor()
+        cursor.execute("DELETE FROM products WHERE category = ? AND product = ?", (category, product))
+        conexao.commit()
+        conexao.close()
+        
+        update_table()
+        page.dialog.open = False
         page.update()
-
+        
         page.overlay.append(
             ft.SnackBar(
                 content=ft.Text(f"{product} removido com sucesso!"),
                 open=True,
-                bgcolor=ft.Colors.GREEN_400,
-                duration=3000,
+                bgcolor=ft.colors.GREEN_400,
+                duration=1000,
             )
         )
         page.update()
 
     def close_dlg_false(e):
-        page.dialog.open = False  # Fecha o diálogo ativo
+        page.dialog.open = False
         page.update()
 
     def update_add_quantity(e):
-        nonlocal products, table_container
-        item_data = e.control.data  # Pega os dados do botão clicado
-        category = item_data["categoria"]
-        product = item_data["produto"]
+        nonlocal data_table
+        item_data = e.control.data
+        category = item_data["category"]
+        product = item_data["product"]
 
         page.clean()
         page.add(topBar())
-        importlib.reload(addQuantityPage)  # Recarrega o módulo para evitar cache
-        add_quantity = addQuantityPage.AddQuantity(page, products, category, product)
+        add_quantity = addQuantityPage.AddQuantity(page, data_table, category, product)
         add_quantity.addMainPage()
 
-    # funções dos buttons
+    # Funções dos botões
     def update_add(e):
-        nonlocal products
+        nonlocal data_table
         page.clean()
         page.add(topBar())
         importlib.reload(addPage)
-        add_page = addPage.AddPage(page, products)
+        add_page = addPage.AddPage(page, data_table)
         add_page.addMainPage()
 
     def update_used(e):
-        nonlocal products
+        nonlocal data_table
         page.clean()
         page.add(topBar())
         importlib.reload(usedPage)
-        used_page = usedPage.UsedPage(page, products)
+        used_page = usedPage.UsedPage(page, data_table)
         used_page.addMainPage()
 
     def update_home(e):
         nonlocal search_text, sort_column, sort_ascending, table_container
-        # Zera os filtros
-        search_text = ""  # Limpa o texto de busca
-        sort_column = None  # Remove a ordenação por coluna
-        sort_ascending = True  # Reseta para ordem crescente
-        # Recarrega a página principal
+        search_text.value = ""  # Limpa o texto de busca
+        sort_column = None
+        sort_ascending = True
         page.clean()
         main_page()
-        # Limpa o conteúdo do TextField visualmente
-        for control in page.controls:
-            if isinstance(control, ft.Container) and isinstance(control.content, ft.Column):
-                for col_control in control.content.controls:
-                    if isinstance(col_control, ft.Row):
-                        for tf in col_control.controls:
-                            if isinstance(tf, ft.TextField) and tf.hint_text == "Procure um produto":
-                                tf.value = ""
-                                break 
         page.update()
 
     def update_user(e):
@@ -381,12 +361,21 @@ def main(page: ft.Page):
         importlib.reload(userPage)
         user_page = userPage.main(page)
         user_page
+        
+    def update_version(e):
+        appVersionUpdate.open_dlg_modal(page)
+        
+    filter_icon = ft.IconButton(
+        icon=ft.Icons.FILTER_ALT_OUTLINED,
+        on_click=lambda x: print("FILTRO AVANÇADO")
+    )
 
     # MAIN PAGE
     def main_page():
         nonlocal table_container
         page.add(topBar())
-        table_container = ft.Container(content=products_list(), expand=True)
+        
+        table_container = ft.Container(content=data_table, expand=True)
         main_content = ft.Container(
             content=ft.Column(
                 controls=[
@@ -402,7 +391,8 @@ def main(page: ft.Page):
                                 bgcolor="#FFFFFF",
                                 color="#000000",
                                 on_change=update_search
-                            )
+                            ),
+                            filter_icon
                         ],
                         alignment=ft.MainAxisAlignment.CENTER,
                     ),
@@ -415,16 +405,14 @@ def main(page: ft.Page):
             padding=ft.Padding(left=20, right=20, top=10, bottom=0)
         )
         page.add(main_content)
-        page.update()
-
+        update_table()  # Chama depois de adicionar à página
+        
     def update_search(e):
-        nonlocal search_text, table_container
-        search_text = e.control.value.strip()  # Usa strip() para garantir que espaços não interfiram
-        if table_container:
-            table_container.content = products_list()
-            table_container.update()
+        nonlocal search_text
+        search_text.value = e.control.value.strip()
+        update_table()
 
     # Iniciar a página principal
     main_page()
-
-ft.app(target=main, assets_dir="assets")
+    
+ft.app(target=main)

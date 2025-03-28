@@ -1,14 +1,31 @@
 import flet as ft
+import sqlite3
 
 class AddPage:
-    def __init__(self, page: ft.Page, products: dict):
+    def __init__(self, page: ft.Page, data_table: ft.DataTable):
         self.page = page
-        self.products = products  # Recebe o dicionário products diretamente
+        self.data_table = data_table  # Referência à DataTable para atualização
         self.dropdown = self.categories_dropdown()
         self.new_category_field = None  # Referência ao TextField para categoria
         self.new_product_field = None   # Referência ao TextField para produto
         self.quantity_field = None      # Referência ao TextField para quantidade
-        self.snack_bar = ft.SnackBar(content=ft.Text(""), open=False)  # SnackBar persistente
+        self.snack_bar = ft.SnackBar(
+            content=ft.Text("", weight=ft.FontWeight.BOLD),
+            open=False,
+            bgcolor=ft.colors.GREY_800,
+            padding=10,
+            elevation=8,
+            duration=1800,
+        )
+
+    def get_categories(self):
+        """Obtém as categorias existentes do banco de dados."""
+        conexao = sqlite3.connect("tb_products.db")
+        cursor = conexao.cursor()
+        cursor.execute("SELECT DISTINCT category FROM products")
+        categories = [row[0] for row in cursor.fetchall()]
+        conexao.close()
+        return categories
 
     def add_new_category(self):
         # Campo de texto para a nova categoria
@@ -48,37 +65,37 @@ class AddPage:
         new_category = self.new_category_field.value.strip()
 
         if not new_category:
-            self.snack_bar.content = ft.Text("Por favor, digite uma categoria!", weight=ft.FontWeight.BOLD)
+            self.snack_bar.content.value = "Por favor, digite uma categoria!"
             self.snack_bar.bgcolor = ft.colors.ORANGE_300
             self.snack_bar.open = True
             self.page.update()
             return
 
-        # Verifica se a categoria já existe (case-insensitive)
-        if new_category.lower() in (cat.lower() for cat in self.products.keys()):
-            self.snack_bar.content = ft.Text(f"A categoria '{new_category}' já existe!", weight=ft.FontWeight.BOLD)
+        # Verifica se a categoria já existe no banco (case-insensitive)
+        categories = self.get_categories()
+        if new_category.lower() in (cat.lower() for cat in categories):
+            self.snack_bar.content.value = f"A categoria '{new_category}' já existe!"
             self.snack_bar.bgcolor = ft.colors.ORANGE_200
             self.snack_bar.open = True
             self.page.update()
             return
 
-        # Adiciona a nova categoria ao dicionário products
-        self.products[new_category] = {}
-        self.dropdown.options = [ft.dropdown.Option(cat) for cat in self.products.keys()]
+        # Como estamos apenas criando a categoria, podemos adicionar um produto vazio ou apenas atualizar o dropdown
+        self.dropdown.options = [ft.dropdown.Option(cat) for cat in self.get_categories() + [new_category]]
         self.new_category_field.value = ""
-        self.snack_bar.content = ft.Text(f"Categoria '{new_category}' adicionada com sucesso!", weight=ft.FontWeight.BOLD)
+        self.snack_bar.content.value = f"Categoria '{new_category}' adicionada com sucesso!"
         self.snack_bar.bgcolor = ft.colors.GREEN_400
         self.snack_bar.open = True
         self.page.update()
 
     def categories_dropdown(self):
-        # Cria o dropdown com base nas chaves do dicionário products
-        return ft.DropdownM2(
+        # Cria o dropdown com base nas categorias do banco de dados
+        return ft.Dropdown(
             label="Selecione uma Categoria",
             width=260,
             border_color=ft.colors.GREY_100,
             hint_text="Selecione uma categoria",
-            options=[ft.dropdown.Option(cat) for cat in self.products.keys()],
+            options=[ft.dropdown.Option(cat) for cat in self.get_categories()],
         )
 
     def add_new_product(self):
@@ -102,7 +119,7 @@ class AddPage:
             border_radius=10,
             bgcolor=ft.colors.GREY_100,
             color="#000000",
-            #input_filter=ft.InputFilter(regex_string=r"[0-9]")  # Permite apenas números
+            keyboard_type=ft.KeyboardType.NUMBER, # Apenas números
         )
 
         # Botão de confirmar produto
@@ -136,21 +153,21 @@ class AddPage:
 
         # Validações
         if not selected_category:
-            self.snack_bar.content = ft.Text("Por favor, selecione uma categoria!", weight=ft.FontWeight.BOLD)
+            self.snack_bar.content.value = "Por favor, selecione uma categoria!"
             self.snack_bar.bgcolor = ft.colors.ORANGE_300
             self.snack_bar.open = True
             self.page.update()
             return
 
         if not new_product:
-            self.snack_bar.content = ft.Text("Por favor, digite o nome do produto!", weight=ft.FontWeight.BOLD)
+            self.snack_bar.content.value = "Por favor, digite o nome do produto!"
             self.snack_bar.bgcolor = ft.colors.ORANGE_300
             self.snack_bar.open = True
             self.page.update()
             return
 
         if not quantity:
-            self.snack_bar.content = ft.Text("Por favor, digite a quantidade!", weight=ft.FontWeight.BOLD)
+            self.snack_bar.content.value = "Por favor, digite a quantidade!"
             self.snack_bar.bgcolor = ft.colors.ORANGE_300
             self.snack_bar.open = True
             self.page.update()
@@ -158,7 +175,7 @@ class AddPage:
 
         # Validação manual da quantidade
         if not quantity.isdigit():
-            self.snack_bar.content = ft.Text("A quantidade deve ser um número inteiro!", weight=ft.FontWeight.BOLD)
+            self.snack_bar.content.value = "A quantidade deve ser um número inteiro!"
             self.snack_bar.bgcolor = ft.colors.RED_400
             self.snack_bar.open = True
             self.page.update()
@@ -172,26 +189,82 @@ class AddPage:
             self.page.update()
             return
 
-        # Verifica se o produto já existe na categoria selecionada (case-insensitive)
-        if new_product.lower() in (prod.lower() for prod in self.products[selected_category].keys()):
-            self.snack_bar.content = ft.Text(f"O produto '{new_product}' já existe em '{selected_category}'!", weight=ft.FontWeight.BOLD)
+        # Verifica se o produto já existe na categoria selecionada no banco
+        conexao = sqlite3.connect("tb_products.db")
+        cursor = conexao.cursor()
+        cursor.execute(
+            "SELECT product FROM products WHERE category = ? AND product = ?",
+            (selected_category, new_product)
+        )
+        if cursor.fetchone():
+            self.snack_bar.content.value = f"O produto '{new_product}' já existe em '{selected_category}'!"
             self.snack_bar.bgcolor = ft.colors.ORANGE_200
             self.snack_bar.open = True
             self.page.update()
+            conexao.close()
             return
 
-        # Adiciona o produto à categoria selecionada
-        self.products[selected_category][new_product] = quantity_int
+        # Adiciona o novo produto ao banco de dados
+        cursor.execute(
+            "INSERT INTO products (category, product, quantity) VALUES (?, ?, ?)",
+            (selected_category, new_product, quantity_int)
+        )
+        conexao.commit()
+        conexao.close()
 
         # Limpa os campos
         self.new_product_field.value = ""
         self.quantity_field.value = ""
 
+        # Atualiza a DataTable
+        self.update_data_table()
+
         # Exibe mensagem de sucesso
-        self.snack_bar.content = ft.Text(f"Produto '{new_product}' adicionado a '{selected_category}' com sucesso!", weight=ft.FontWeight.BOLD)
+        self.snack_bar.content.value = f"Produto '{new_product}' adicionado a '{selected_category}' com sucesso!"
         self.snack_bar.bgcolor = ft.colors.GREEN_400
         self.snack_bar.open = True
         self.page.update()
+
+    def update_data_table(self):
+        """Atualiza a DataTable com os dados mais recentes do banco de dados."""
+        self.data_table.rows.clear()
+        conexao = sqlite3.connect("tb_products.db")
+        cursor = conexao.cursor()
+        cursor.execute("SELECT category, product, quantity FROM products")
+        dados = cursor.fetchall()
+        conexao.close()
+
+        for category, product, quantity in dados:
+            self.data_table.rows.append(
+                ft.DataRow(
+                    cells=[
+                        ft.DataCell(ft.Text(category)),
+                        ft.DataCell(ft.Text(product)),
+                        ft.DataCell(ft.Text(str(quantity))),
+                        ft.DataCell(
+                            ft.Row(
+                                controls=[
+                                    ft.IconButton(
+                                        icon=ft.icons.ADD_CIRCLE_OUTLINE,
+                                        icon_color="BLUE",
+                                        icon_size=20,
+                                        data={"category": category, "product": product},
+                                        # on_click definido na página principal
+                                    ),
+                                    ft.IconButton(
+                                        icon=ft.icons.DELETE,
+                                        icon_color="RED",
+                                        icon_size=20,
+                                        data={"category": category, "product": product},
+                                        # on_click definido na página principal
+                                    ),
+                                ],
+                                spacing=10,
+                            )
+                        ),
+                    ]
+                )
+            )
 
     def addMainPage(self):
         main_content = ft.Container(
@@ -209,11 +282,11 @@ class AddPage:
                     ),
                     self.add_new_category(),
                     self.dropdown,
-                    self.add_new_product()  # Adiciona os campos de produto e quantidade
+                    self.add_new_product()
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 alignment=ft.MainAxisAlignment.CENTER,
-                spacing=22  # Aumenta o espaçamento entre os elementos
+                spacing=22
             ),
         )
         # Adiciona o SnackBar à página

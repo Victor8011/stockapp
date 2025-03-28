@@ -8,7 +8,7 @@ def main(page: ft.Page):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
 
     # Caminho da pasta assets
-    pasta_assets = "assets/user"
+    pasta_assets = "assets/"
 
     # Função para limpar a pasta assets
     def limpar_pasta_assets():

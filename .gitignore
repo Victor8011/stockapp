@@ -22,3 +22,5 @@ dist/
 build/
 *.log
 main.spec
+StockApp.spec
+tb_products.db

@@ -12,12 +12,13 @@ import app
 API_KEY = KEY.firebase_key  # Chave API da Web do Firebase
 
 def main(page: ft.Page):
+    page.theme_mode = ft.ThemeMode.LIGHT
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.window.min_width = 620
     page.window.min_height = 620
-    page.window.width = 620
-    page.window.height = 620
+    page.window.width = 700
+    page.window.height = 720
     page.window.maximizable = True
     snack_bar = ft.SnackBar(content=ft.Text(""), open=False)
 
@@ -43,7 +44,7 @@ def main(page: ft.Page):
                 snack_bar.bgcolor = ft.Colors.GREEN_400
                 snack_bar.action="OK"
                 snack_bar.action_color = ft.Colors.BLACK87
-                snack_bar.duration=3000
+                snack_bar.duration=1800
                 snack_bar.open = True
                 
                 # Limpa a tela e mostra Pagina pós login
@@ -63,7 +64,7 @@ def main(page: ft.Page):
             snack_bar.bgcolor = ft.Colors.RED_400
             snack_bar.action="OK"
             snack_bar.action_color = ft.Colors.BLACK87
-            snack_bar.duration=3000
+            snack_bar.duration=1800
             snack_bar.open = True
             page.update()
 
