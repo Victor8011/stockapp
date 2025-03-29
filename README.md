@@ -15,8 +15,8 @@
   - [x] Sistema semi-automático de update
   - Sistema de Backup
   - Criação e Validação de novos usuários
-  - Relatórios de produtos
-  - Importação de relatórios baseado em data para PDF com FPDF
+  - [x] Relatórios de produtos
+  - Importação de relatórios baseado na data para PDF com FPDF
   - Paginação
   - Versão para WEB refatorado com Views
   - Entre outros.
@@ -24,6 +24,8 @@
 - Dependências:
   - Python 3.12.1
   - sqlite3
+  - datetime
+  - pytz
   - Flet 0.26.0
     - `pip install flet`
   - Requests 2.32.3

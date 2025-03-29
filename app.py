@@ -1,5 +1,6 @@
 import flet as ft
 import addPage
+import advancedFilters
 import usedPage
 import importlib
 import userPage
@@ -147,6 +148,7 @@ def main(page: ft.Page):
         top_bar = ft.Container(
             content=top_bar_content,
             height=40,
+            
         )
         return top_bar
 
@@ -155,28 +157,43 @@ def main(page: ft.Page):
         addButton = ft.ElevatedButton(
             text="Criar",
             color=color_font_change,
-            width=100,
-            height=40,
+            width=110,
+            height=30,
+            icon=ft.Icons.ADD_BOX_OUTLINED,
             style=ft.ButtonStyle(
                 shape=ft.RoundedRectangleBorder(radius=10),
-                overlay_color=ft.Colors.GREEN_400,
+                overlay_color=ft.Colors.GREEN_200,
             ),
             on_click=update_add,
         )
+        
+        analyticsButton = ft.ElevatedButton(
+            text="Relatório",
+            color=color_font_change,
+            width=110,
+            height=30,
+            icon=ft.Icons.ANALYTICS_OUTLINED,
+            style=ft.ButtonStyle(
+                shape=ft.RoundedRectangleBorder(radius=10),
+                overlay_color=ft.Colors.PURPLE_200),
+            on_click=update_analytics
+        )
+        
         productsUsedButton = ft.ElevatedButton(
             text="Usados",
             color=color_font_change,
-            width=100,
-            height=40,
+            width=110,
+            height=30,
+            icon=ft.Icons.CHECK,
             style=ft.ButtonStyle(
                 shape=ft.RoundedRectangleBorder(radius=10),
-                overlay_color=ft.Colors.YELLOW_400),
+                overlay_color=ft.Colors.YELLOW_200),
             on_click=update_used
         )
         row = ft.Row(
-            controls=[addButton, productsUsedButton],
+            controls=[addButton, productsUsedButton, analyticsButton],
             alignment=ft.MainAxisAlignment.CENTER,
-            spacing=20,
+            spacing=5,
         )
         return row
 
@@ -345,6 +362,12 @@ def main(page: ft.Page):
         importlib.reload(usedPage)
         used_page = usedPage.UsedPage(page, data_table)
         used_page.addMainPage()
+        
+    def update_analytics(e):
+        page.clean()
+        page.add(topBar())
+        analytics = advancedFilters.main(page)
+        analytics
 
     def update_home(e):
         nonlocal search_text, sort_column, sort_ascending, table_container
@@ -364,11 +387,6 @@ def main(page: ft.Page):
         
     def update_version(e):
         appVersionUpdate.open_dlg_modal(page)
-        
-    filter_icon = ft.IconButton(
-        icon=ft.Icons.FILTER_ALT_OUTLINED,
-        on_click=lambda x: print("FILTRO AVANÇADO")
-    )
 
     # MAIN PAGE
     def main_page():
@@ -392,7 +410,6 @@ def main(page: ft.Page):
                                 color="#000000",
                                 on_change=update_search
                             ),
-                            filter_icon
                         ],
                         alignment=ft.MainAxisAlignment.CENTER,
                     ),
