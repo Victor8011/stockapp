@@ -419,7 +419,7 @@ def main(page: ft.Page):
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=20
             ),
-            padding=ft.Padding(left=20, right=20, top=10, bottom=0)
+            padding=ft.Padding(left=20, right=20, top=10, bottom=15)
         )
         page.add(main_content)
         update_table()  # Chama depois de adicionar à página
@@ -432,4 +432,4 @@ def main(page: ft.Page):
     # Iniciar a página principal
     main_page()
     
-ft.app(target=main)
+#ft.app(target=main)
