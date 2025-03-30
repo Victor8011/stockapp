@@ -7,6 +7,7 @@ def main(page: ft.Page):
     page.scroll = "adaptive"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+    page.theme_mode = ft.ThemeMode.LIGHT
     
     # Função para determinar o spacing da DataTable
     def get_spacing():
@@ -25,8 +26,10 @@ def main(page: ft.Page):
         ],
         rows=[],
         border=ft.border.all(1, ft.colors.GREY_500),
-        border_radius=10,
-        column_spacing=get_spacing()
+        heading_row_color=ft.Colors.BLUE_300,
+        #vertical_lines=ft.border.BorderSide(1, ft.colors.GREY_500),
+        #border_radius=10,
+        column_spacing=get_spacing(),
     )
     
     # Container principal que será atualizado dinamicamente
@@ -101,7 +104,7 @@ def main(page: ft.Page):
 
         pb = ft.PopupMenuButton(
             icon=ft.Icons.FILTER_ALT_OUTLINED,
-            style=ft.ButtonStyle(icon_size=30),
+            style=ft.ButtonStyle(icon_size=30,  shape=ft.RoundedRectangleBorder(radius=10)),
             items=[
                 ft.PopupMenuItem(text="Filtrar por:", disabled=True),
                 ft.PopupMenuItem(icon=ft.Icons.CALENDAR_TODAY_OUTLINED, text="hoje", on_click=lambda _: join_tables("hoje")),
@@ -260,6 +263,6 @@ def main(page: ft.Page):
     page.add(main_content)
 
     # Chamar a função para preencher a tabela com dados da semana
-    join_tables("hoje")
+    join_tables("semana")
     
-ft.app(target=main)
+#ft.app(target=main)
