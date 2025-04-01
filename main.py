@@ -11,11 +11,12 @@ def main(page: ft.Page):
     page.theme_mode = ft.ThemeMode.LIGHT
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-    page.window.min_width = 620
-    page.window.min_height = 620
+    page.window.min_width = 660
+    page.window.min_height = 660
     page.window.width = 700
     page.window.height = 720
     page.window.maximizable = True
+    page.window.title_bar_hidden = False
     snack_bar = ft.SnackBar(content=ft.Text(""), open=False)
 
     def btn_login(e):
@@ -33,9 +34,9 @@ def main(page: ft.Page):
             if "idToken" in data:
                 KEY.user_email = textfield_email.value
                 snack_bar.content = ft.Text("Logado com sucesso!", weight=ft.FontWeight.BOLD)
-                snack_bar.bgcolor = ft.colors.GREEN_400
+                snack_bar.bgcolor = ft.Colors.GREEN_400
                 snack_bar.action = "OK"
-                snack_bar.action_color = ft.colors.BLACK87
+                snack_bar.action_color = ft.Colors.BLACK87
                 snack_bar.duration = 1800
                 snack_bar.open = True
                 
@@ -50,9 +51,9 @@ def main(page: ft.Page):
             if isinstance(e, requests.RequestException) and e.response is not None:
                 error_message = e.response.json().get("error", {}).get("message", error_message)
             snack_bar.content = ft.Text("Email ou senha incorreta", weight=ft.FontWeight.BOLD)
-            snack_bar.bgcolor = ft.colors.RED_400
+            snack_bar.bgcolor = ft.Colors.RED_400
             snack_bar.action = "OK"
-            snack_bar.action_color = ft.colors.BLACK87
+            snack_bar.action_color = ft.Colors.BLACK87
             snack_bar.duration = 1800
             snack_bar.open = True
             page.update()
@@ -79,7 +80,7 @@ def main(page: ft.Page):
         gradient=ft.LinearGradient(
             begin=ft.Alignment(-1, 0),
             end=ft.Alignment(1, 0),
-            colors=[ft.colors.BLUE, ft.colors.GREEN],
+            colors=[ft.Colors.BLUE, ft.Colors.GREEN],
             stops=[0.0, 1.0],
             rotation=0,
         ),
@@ -161,7 +162,7 @@ def main(page: ft.Page):
         height=40,
         style=ft.ButtonStyle(
             shape=ft.RoundedRectangleBorder(radius=10),
-            overlay_color=ft.colors.GREEN_400
+            overlay_color=ft.Colors.GREEN_400
         ),
         on_click=btn_login
     )

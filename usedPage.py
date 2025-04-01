@@ -9,9 +9,9 @@ class UsedPage:
         self.dropdown_product = self.products_dropdown()
         self.quantity_field = None
         self.snack_bar = ft.SnackBar(
-            content=ft.Text("", weight=ft.FontWeight.BOLD, color=ft.colors.WHITE),
+            content=ft.Text("", weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
             open=False,
-            bgcolor=ft.colors.GREY_800,
+            bgcolor=ft.Colors.GREY_800,
             padding=10,
             elevation=8,
             duration=1800,
@@ -51,7 +51,7 @@ class UsedPage:
         dropdown = ft.Dropdown(
             label="Selecione uma Categoria",
             width=260,
-            border_color=ft.colors.GREY_100,
+            border_color=ft.Colors.GREY_100,
             hint_text="Selecione uma categoria",
             options=[ft.dropdown.Option(cat) for cat in self.get_categories()],
             on_change=self.update_products_dropdown
@@ -62,7 +62,7 @@ class UsedPage:
         dropdown = ft.Dropdown(
             label="Selecione ou digite um Produto",
             width=260,
-            border_color=ft.colors.GREY_100,
+            border_color=ft.Colors.GREY_100,
             hint_text="Selecionar",
             options=[],
             text_size=15,
@@ -103,7 +103,7 @@ class UsedPage:
             width=260,
             text_size=15,
             border_radius=10,
-            bgcolor=ft.colors.GREY_100,
+            bgcolor=ft.Colors.GREY_100,
             color="#000000",
             keyboard_type=ft.KeyboardType.NUMBER,  # Apenas números
         )
@@ -136,28 +136,28 @@ class UsedPage:
 
         if not selected_category:
             self.snack_bar.content.value = "Por favor, selecione uma categoria!"
-            self.snack_bar.bgcolor = ft.colors.ORANGE_300
+            self.snack_bar.bgcolor = ft.Colors.ORANGE_300
             self.snack_bar.open = True
             self.page.update()
             return
 
         if not selected_product:
             self.snack_bar.content.value = "Por favor, selecione um produto!"
-            self.snack_bar.bgcolor = ft.colors.ORANGE_300
+            self.snack_bar.bgcolor = ft.Colors.ORANGE_300
             self.snack_bar.open = True
             self.page.update()
             return
 
         if not quantity:
             self.snack_bar.content.value = "Por favor, digite a quantidade usada!"
-            self.snack_bar.bgcolor = ft.colors.ORANGE_300
+            self.snack_bar.bgcolor = ft.Colors.ORANGE_300
             self.snack_bar.open = True
             self.page.update()
             return
 
         if not quantity.isdigit():
             self.snack_bar.content.value = "A quantidade deve ser um número inteiro!"
-            self.snack_bar.bgcolor = ft.colors.RED_400
+            self.snack_bar.bgcolor = ft.Colors.RED_400
             self.snack_bar.open = True
             self.page.update()
             return
@@ -165,7 +165,7 @@ class UsedPage:
         quantity_int = int(quantity)
         if quantity_int <= 0:
             self.snack_bar.content.value = "A quantidade deve ser maior que zero!"
-            self.snack_bar.bgcolor = ft.colors.ORANGE_600
+            self.snack_bar.bgcolor = ft.Colors.ORANGE_600
             self.snack_bar.open = True
             self.page.update()
             return
@@ -173,7 +173,7 @@ class UsedPage:
         current_quantity = self.get_quantity(selected_category, selected_product)
         if quantity_int > current_quantity:
             self.snack_bar.content.value = f"A quantidade inserida ({quantity_int}) é maior que o estoque disponível ({current_quantity})!"
-            self.snack_bar.bgcolor = ft.colors.RED_400
+            self.snack_bar.bgcolor = ft.Colors.RED_400
             self.snack_bar.open = True
             self.page.update()
             return
@@ -197,7 +197,7 @@ class UsedPage:
         self.update_data_table()
 
         self.snack_bar.content.value = f"{quantity_int} unidade(s) de '{selected_product}' usada(s) em '{selected_category}'!"
-        self.snack_bar.bgcolor = ft.colors.GREEN_400
+        self.snack_bar.bgcolor = ft.Colors.GREEN_400
         self.snack_bar.open = True
         self.page.update()
 

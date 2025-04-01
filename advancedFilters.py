@@ -33,8 +33,8 @@ def main(page: ft.Page):
             ft.DataColumn(ft.Text("Depois")),
         ],
         rows=[],
-        border=ft.border.all(1, ft.colors.GREY_500),
-        heading_row_color=ft.colors.BLUE_300,
+        border=ft.border.all(1, ft.Colors.GREY_500),
+        heading_row_color=ft.Colors.BLUE_300,
         column_spacing=get_spacing(),
     )
     
@@ -121,7 +121,7 @@ def main(page: ft.Page):
                 ft.SnackBar(
                     content=ft.Text(f"Erro ao abrir o PDF: {str(e)}"),
                     open=True,
-                    bgcolor=ft.colors.RED_400,
+                    bgcolor=ft.Colors.RED_400,
                     duration=3000,
                 )
             )
@@ -130,7 +130,7 @@ def main(page: ft.Page):
             ft.SnackBar(
                 content=ft.Text(f"PDF salvo como '{file_name}'"),
                 open=True,
-                bgcolor=ft.colors.GREEN_400,
+                bgcolor=ft.Colors.GREEN_400,
                 duration=2000,
             )
         )
@@ -318,7 +318,7 @@ def main(page: ft.Page):
 
     download_pdf_btn = ft.IconButton(
         icon=ft.Icons.FILE_DOWNLOAD_OUTLINED,
-        icon_color=ft.colors.RED_300,
+        icon_color=ft.Colors.RED_300,
         style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10)),
         on_click=update_and_save_pdf
     )
@@ -359,6 +359,6 @@ def main(page: ft.Page):
     )
     
     page.add(main_content)
-    last_results = join_tables("hoje")
+    last_results = join_tables("semana")
 
 #ft.app(target=main)

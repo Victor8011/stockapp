@@ -15,14 +15,14 @@ class AddQuantity:
             width=180,
             text_size=15,
             border_radius=10,
-            bgcolor=ft.colors.GREY_200,
+            bgcolor=ft.Colors.GREY_200,
             color="#000000",
             keyboard_type=ft.KeyboardType.NUMBER, # Apenas números
         )
         self.snack_bar = ft.SnackBar(
-            content=ft.Text("", weight=ft.FontWeight.BOLD, color=ft.colors.WHITE),
+            content=ft.Text("", weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
             open=False,
-            bgcolor=ft.colors.GREY_800,
+            bgcolor=ft.Colors.GREY_800,
             padding=10,
             elevation=8,
             duration=1800,
@@ -32,7 +32,7 @@ class AddQuantity:
             value=f"{self.get_current_quantity()}",
             size=15,
             weight=ft.FontWeight.BOLD,
-            color=ft.colors.YELLOW_900,
+            color=ft.Colors.YELLOW_900,
             disabled=True
         )
         
@@ -55,7 +55,7 @@ class AddQuantity:
         # Validação: deve ser um número inteiro
         if not quantity.isdigit():
             self.snack_bar.content.value = "Digite um número inteiro"
-            self.snack_bar.bgcolor = ft.colors.ORANGE_600
+            self.snack_bar.bgcolor = ft.Colors.ORANGE_600
             self.snack_bar.open = True
             self.page.update()
             return
@@ -64,7 +64,7 @@ class AddQuantity:
         quantity_int = int(quantity)
         if quantity_int <= 0:
             self.snack_bar.content.value = "A quantidade deve ser maior que zero!"
-            self.snack_bar.bgcolor = ft.colors.ORANGE_600
+            self.snack_bar.bgcolor = ft.Colors.ORANGE_600
             self.snack_bar.open = True
             self.page.update()
             return
@@ -91,7 +91,7 @@ class AddQuantity:
         self.update_data_table()
         
         self.snack_bar.content.value = f"{quantity_int} unidade(s) adicionada(s) a '{self.product}' em '{self.category}'!"
-        self.snack_bar.bgcolor = ft.colors.GREEN_400
+        self.snack_bar.bgcolor = ft.Colors.GREEN_400
         self.snack_bar.open = True
         self.page.update()
         
@@ -172,7 +172,7 @@ class AddQuantity:
                 controls=[
                     ft.Text(
                         "Adicionar Quantidade",
-                        color=ft.colors.BLUE_500,
+                        color=ft.Colors.BLUE_500,
                         weight=ft.FontWeight.BOLD,
                         text_align=ft.TextAlign.CENTER,
                         size=30,

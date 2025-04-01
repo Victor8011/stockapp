@@ -226,7 +226,7 @@ def main(page: ft.Page):
             ft.DataColumn(ft.Text("Ações", color=ft.Colors.GREEN_400)),
         ],
         rows=[],
-        border=ft.border.all(1, ft.colors.GREY_500),
+        border=ft.border.all(1, ft.Colors.GREY_500),
         border_radius=10,
         column_spacing=get_spacing()
     )
@@ -294,7 +294,7 @@ def main(page: ft.Page):
             content=ft.Text(f"Certeza que deseja excluir {item_data['product']}?"),
             actions=[
                 ft.TextButton("Sim",
-                    style=ft.ButtonStyle(color={"": ft.colors.RED}),
+                    style=ft.ButtonStyle(color={"": ft.Colors.RED}),
                     data=item_data, on_click=close_dlg_true),
                 ft.TextButton("Não", on_click=close_dlg_false),
             ],
@@ -325,7 +325,7 @@ def main(page: ft.Page):
             ft.SnackBar(
                 content=ft.Text(f"{product} removido com sucesso!"),
                 open=True,
-                bgcolor=ft.colors.GREEN_400,
+                bgcolor=ft.Colors.GREEN_400,
                 duration=1000,
             )
         )

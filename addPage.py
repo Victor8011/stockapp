@@ -12,7 +12,7 @@ class AddPage:
         self.snack_bar = ft.SnackBar(
             content=ft.Text("", weight=ft.FontWeight.BOLD),
             open=False,
-            bgcolor=ft.colors.GREY_800,
+            bgcolor=ft.Colors.GREY_800,
             padding=10,
             elevation=8,
             duration=1800,
@@ -35,7 +35,7 @@ class AddPage:
             width=200,
             text_size=15,
             border_radius=10,
-            bgcolor=ft.colors.GREY_100,
+            bgcolor=ft.Colors.GREY_100,
             color="#000000",
         )
 
@@ -66,7 +66,7 @@ class AddPage:
 
         if not new_category:
             self.snack_bar.content.value = "Por favor, digite uma categoria!"
-            self.snack_bar.bgcolor = ft.colors.ORANGE_300
+            self.snack_bar.bgcolor = ft.Colors.ORANGE_300
             self.snack_bar.open = True
             self.page.update()
             return
@@ -75,7 +75,7 @@ class AddPage:
         categories = self.get_categories()
         if new_category.lower() in (cat.lower() for cat in categories):
             self.snack_bar.content.value = f"A categoria '{new_category}' já existe!"
-            self.snack_bar.bgcolor = ft.colors.ORANGE_200
+            self.snack_bar.bgcolor = ft.Colors.ORANGE_200
             self.snack_bar.open = True
             self.page.update()
             return
@@ -84,7 +84,7 @@ class AddPage:
         self.dropdown.options = [ft.dropdown.Option(cat) for cat in self.get_categories() + [new_category]]
         self.new_category_field.value = ""
         self.snack_bar.content.value = f"Categoria '{new_category}' adicionada com sucesso!"
-        self.snack_bar.bgcolor = ft.colors.GREEN_400
+        self.snack_bar.bgcolor = ft.Colors.GREEN_400
         self.snack_bar.open = True
         self.page.update()
 
@@ -93,7 +93,7 @@ class AddPage:
         return ft.Dropdown(
             label="Selecione uma Categoria",
             width=260,
-            border_color=ft.colors.GREY_100,
+            border_color=ft.Colors.GREY_100,
             hint_text="Selecione uma categoria",
             options=[ft.dropdown.Option(cat) for cat in self.get_categories()],
         )
@@ -106,7 +106,7 @@ class AddPage:
             width=260,
             text_size=15,
             border_radius=10,
-            bgcolor=ft.colors.GREY_100,
+            bgcolor=ft.Colors.GREY_100,
             color="#000000",
         )
 
@@ -117,7 +117,7 @@ class AddPage:
             width=260,
             text_size=15,
             border_radius=10,
-            bgcolor=ft.colors.GREY_100,
+            bgcolor=ft.Colors.GREY_100,
             color="#000000",
             keyboard_type=ft.KeyboardType.NUMBER, # Apenas números
         )
@@ -154,21 +154,21 @@ class AddPage:
         # Validações
         if not selected_category:
             self.snack_bar.content.value = "Por favor, selecione uma categoria!"
-            self.snack_bar.bgcolor = ft.colors.ORANGE_300
+            self.snack_bar.bgcolor = ft.Colors.ORANGE_300
             self.snack_bar.open = True
             self.page.update()
             return
 
         if not new_product:
             self.snack_bar.content.value = "Por favor, digite o nome do produto!"
-            self.snack_bar.bgcolor = ft.colors.ORANGE_300
+            self.snack_bar.bgcolor = ft.Colors.ORANGE_300
             self.snack_bar.open = True
             self.page.update()
             return
 
         if not quantity:
             self.snack_bar.content.value = "Por favor, digite a quantidade!"
-            self.snack_bar.bgcolor = ft.colors.ORANGE_300
+            self.snack_bar.bgcolor = ft.Colors.ORANGE_300
             self.snack_bar.open = True
             self.page.update()
             return
@@ -176,7 +176,7 @@ class AddPage:
         # Validação manual da quantidade
         if not quantity.isdigit():
             self.snack_bar.content.value = "A quantidade deve ser um número inteiro!"
-            self.snack_bar.bgcolor = ft.colors.RED_400
+            self.snack_bar.bgcolor = ft.Colors.RED_400
             self.snack_bar.open = True
             self.page.update()
             return
@@ -184,7 +184,7 @@ class AddPage:
         quantity_int = int(quantity)
         if quantity_int < 0:
             self.snack_bar.content.value = "A quantidade deve ser um número positivo!"
-            self.snack_bar.bgcolor = ft.colors.ORANGE_600
+            self.snack_bar.bgcolor = ft.Colors.ORANGE_600
             self.snack_bar.open = True
             self.page.update()
             return
@@ -198,7 +198,7 @@ class AddPage:
         )
         if cursor.fetchone():
             self.snack_bar.content.value = f"O produto '{new_product}' já existe em '{selected_category}'!"
-            self.snack_bar.bgcolor = ft.colors.ORANGE_200
+            self.snack_bar.bgcolor = ft.Colors.ORANGE_200
             self.snack_bar.open = True
             self.page.update()
             conexao.close()
@@ -221,7 +221,7 @@ class AddPage:
 
         # Exibe mensagem de sucesso
         self.snack_bar.content.value = f"Produto '{new_product}' adicionado a '{selected_category}' com sucesso!"
-        self.snack_bar.bgcolor = ft.colors.GREEN_400
+        self.snack_bar.bgcolor = ft.Colors.GREEN_400
         self.snack_bar.open = True
         self.page.update()
 

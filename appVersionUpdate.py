@@ -18,7 +18,7 @@ def open_dlg_modal(page: ft.Page):
         
         # Abre o link no navegador
         def open_link(e):
-            page.launch_url("https://github.com/truelanz") 
+            page.launch_url("https://github.com/truelanz/stockapp") 
             page.dialog.open = False
             page.update()
         
@@ -35,12 +35,12 @@ def open_dlg_modal(page: ft.Page):
                     ft.Row(
                         controls=[
                             ft.TextButton("Atualizar", 
-                                        style=ft.ButtonStyle(color={"": ft.colors.GREEN}),
+                                        style=ft.ButtonStyle(color={"": ft.Colors.GREEN}),
                                         on_click=open_link
                             ),
                             
                             ft.TextButton("Não atualizar", 
-                                        style=ft.ButtonStyle(color={"": ft.colors.RED_400}), 
+                                        style=ft.ButtonStyle(color={"": ft.Colors.RED_400}), 
                                         on_click=close_dlg_false),
                         ],
                         spacing=20,
@@ -58,7 +58,7 @@ def open_dlg_modal(page: ft.Page):
                 modal=True,
                 content=ft.Text(f"Você já está na versão mais recente do App!\nVersão atual: {APP_VERSION}"),
                 actions=[
-                    ft.TextButton("Confirmar", style=ft.ButtonStyle(color={"": ft.colors.GREEN}), on_click=close_dlg_false),
+                    ft.TextButton("Confirmar", style=ft.ButtonStyle(color={"": ft.Colors.GREEN}), on_click=close_dlg_false),
                 ],
                 actions_alignment=ft.MainAxisAlignment.CENTER
             )
