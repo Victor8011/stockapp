@@ -16,7 +16,7 @@
   - Sistema de Backup
   - Criação e Validação de novos usuários
   - [x] Relatórios de produtos
-  - Importação de relatórios baseado na data para PDF com FPDF
+  - [x] Importação de relatórios baseado na data para PDF com FPDF
   - Paginação
   - Versão para WEB refatorado com Views
   - Entre outros.
