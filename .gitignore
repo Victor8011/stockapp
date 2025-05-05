@@ -11,6 +11,7 @@ storage/
 pyvenv.cfg
 KEY.py
 pyproject.toml
+.venv/
 
 # Outros arquivos comuns em projetos Python/Flet
 __pycache__/
@@ -24,3 +25,4 @@ build/
 main.spec
 StockApp.spec
 tb_products.db
+.tool-versions
