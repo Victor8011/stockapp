@@ -1,11 +1,12 @@
 import flet as ft
-import time
 import threading
+import time
+import re
 import requests
 import KEY
 import app
 
-API_KEY = KEY.firebase_key  # Chave API da Web do Firebase
+API_KEY = KEY.firebase_key
 
 def main(page: ft.Page):
     page.theme_mode = ft.ThemeMode.LIGHT
@@ -19,12 +20,74 @@ def main(page: ft.Page):
     page.window.title_bar_hidden = False
     snack_bar = ft.SnackBar(content=ft.Text(""), open=False)
 
-    def btn_login(e):
+    # Snackbar. Alerta de cadastro bem sucedido
+    def snack_sucess():
+            snack_bar.content = ft.Text("Cadastro realizado com sucesso!", weight=ft.FontWeight.BOLD)
+            snack_bar.bgcolor = ft.Colors.GREEN_400
+            snack_bar.duration = 1800
+            snack_bar.open = True
+
+    # Snackbar. Alerta para credenciais incorretas
+    def snack_error():
+            snack_bar.content = ft.Text("Erro! Verifique suas credencias!", weight=ft.FontWeight.BOLD)
+            snack_bar.bgcolor = ft.Colors.RED_400
+            snack_bar.duration = 1800
+            snack_bar.open = True
+
+    # Botão de cadastro
+    def btn_register(e):
+        email_format = r'^[a-zA-Z0-9._]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,}$'
+        password_format = r'[a-zA-Z0-9]{6,}'
+        valid_email = ""
+        valid_password = ""
+        
+        # Verifica se todos os campos foram preenchidos
+        for field in[
+            textfield_email_sign,
+            textfield_confirm_email,
+            textfield_password_sign,
+            textfield_confirm_password
+        ]:
+            if not field.value:
+                field.error_text = "Campo obrigatorio"
+
+        page.update()
+
+        # Verifica se os emails são válidos
+        if not re.match(email_format, textfield_email_sign.value):
+            snack_error()
+            return
+        
+        if not re.match(email_format, textfield_confirm_email.value):
+            snack_error()
+            return
+
+        # Verifica se os emails coincidem
+        if textfield_email_sign.value != textfield_confirm_email.value:
+            snack_error()
+            return
+        valid_email = textfield_confirm_email.value
+        
+        # Verifica se as senhas são válidas
+        if not re.match(password_format, textfield_password_sign.value):
+            snack_error()
+            return
+        
+        if not re.match(password_format, textfield_confirm_password.value):
+            snack_error()
+            return
+
+        # Verifica se as senhas coincidem
+        if textfield_password_sign.value != textfield_confirm_password.value:
+            snack_error()
+            return
+        valid_password = textfield_confirm_password.value
+        
         try:
-            url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={API_KEY}"
+            url = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={API_KEY}"
             payload = {
-                "email": textfield_email.value,
-                "password": textfield_password.value,
+                "email": valid_email,
+                "password": valid_password,
                 "returnSecureToken": True
             }
             response = requests.post(url, json=payload)
@@ -32,37 +95,74 @@ def main(page: ft.Page):
 
             data = response.json()
             if "idToken" in data:
-                KEY.user_email = textfield_email.value
-                snack_bar.content = ft.Text("Logado com sucesso!", weight=ft.FontWeight.BOLD)
+                snack_sucess()
+
+                # Limpa os campos
+                textfield_email_sign.value = ""
+                textfield_confirm_email.value = ""
+                textfield_password_sign.value = ""
+                textfield_confirm_password.value = ""
+
+                page.clean()
+                page.add(log_in_layout)
+                page.update()
+            else:
+                raise Exception()
+            
+        except Exception as ex:
+            snack_error()
+
+    def btn_log_in(e):
+        email_format = r'^[a-zA-Z0-9._]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,}$'
+        password_format = r'[a-zA-Z0-9]{6,}'
+        valid_email = ""
+        valid_password = ""
+
+        # Verifica se o email é válido
+        if not re.match(email_format, textfield_email.value):
+            snack_error()
+            return
+        valid_email = textfield_email.value
+        
+        # Verifica se a senha é válida
+        if not re.match(password_format, textfield_password.value):
+            snack_error()
+            return
+        valid_password = textfield_password.value
+
+        try:
+            url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={API_KEY}"
+            payload = {
+                "email": valid_email,
+                "password": valid_password,
+                "returnSecureToken": True
+            }
+            response = requests.post(url, json=payload)
+            response.raise_for_status()
+
+            data = response.json()
+            if "idToken" in data:
+                # Snackbar sucesso ao autenticar usuário
+                snack_bar.content = ft.Text("Autenticação bem sucedida!", weight=ft.FontWeight.BOLD)
                 snack_bar.bgcolor = ft.Colors.GREEN_400
-                snack_bar.action = "OK"
-                snack_bar.action_color = ft.Colors.BLACK87
                 snack_bar.duration = 1800
                 snack_bar.open = True
-                
+
+                # Limpa os campos
+                textfield_email.value = ""
+                textfield_password.value = ""
+
                 page.clean()
                 app.main(page)
                 page.update()
             else:
-                raise Exception("Falha na autenticação")
+                raise Exception()
+            
+        except Exception as ex:
+            snack_error()
 
-        except Exception as e:
-            error_message = "Erro ao fazer login. Verifique suas credenciais."
-            if isinstance(e, requests.RequestException) and e.response is not None:
-                error_message = e.response.json().get("error", {}).get("message", error_message)
-            snack_bar.content = ft.Text("Email ou senha incorreta", weight=ft.FontWeight.BOLD)
-            snack_bar.bgcolor = ft.Colors.RED_400
-            snack_bar.action = "OK"
-            snack_bar.action_color = ft.Colors.BLACK87
-            snack_bar.duration = 1800
-            snack_bar.open = True
-            page.update()
 
-            textfield_email.value = ""
-            textfield_password.value = ""
-            page.update()
-
-    # TEXT TITLER STOCKAPP --------
+    # Titulo com icone animado
     login_text = ft.Text(
         "StockApp",
         size=30,
@@ -153,38 +253,260 @@ def main(page: ft.Page):
     threading.Thread(target=animate_gradient, daemon=True).start()
     threading.Thread(target=animate_image_size, daemon=True).start()
 
-    # Campos de login
-    textfield_email = ft.TextField(label="Email", width=300)
-    textfield_password = ft.TextField(label="Senha", password=True, width=300)
-    confirm_button = ft.ElevatedButton(
-        text="Login",
-        width=100,
-        height=40,
-        style=ft.ButtonStyle(
-            shape=ft.RoundedRectangleBorder(radius=10),
-            overlay_color=ft.Colors.GREEN_400
-        ),
-        on_click=btn_login
+    # Campos de texto
+
+    # Valida o campo "textfield_email"
+    def textfield_email_check(e):
+        email_format = r'^[a-zA-Z0-9._]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,}$'
+
+        if textfield_email.value == "":
+            textfield_email.error_text = "Campo obrigatorio"
+            return
+        
+        if not re.match(email_format, textfield_email.value):
+            textfield_email.error_text = "Email inválido"
+            return
+        textfield_email.error_text = ""
+
+    # Valida o campo "textfield_password"
+    def textfield_password_check(e):
+        password_format = r'[a-zA-Z0-9]{6,}'
+
+        if textfield_password.value == "":
+            textfield_password.error_text = "Campo obrigatorio"
+            return
+        
+        if not re.match(password_format, textfield_password.value):
+            textfield_password.error_text = "Mínimo de 6 caracteres: a-z, A-Z, 9-0"
+            return
+        textfield_password.error_text = ""
+
+
+    # Valida o campo "textfield_email_sign"
+    def textfield_email_sign_check(e):
+        email_format = r'^[a-zA-Z0-9._]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,}$'
+
+        if textfield_email_sign.value == "":
+            textfield_email_sign.error_text = "Campo obrigatorio"
+            return
+        
+        if not re.match(email_format, textfield_email_sign.value):
+            textfield_email_sign.error_text = "Email inválido"
+            return
+        textfield_email_sign.error_text = ""
+
+    # Valida o campo "textfield_confirm_email"
+    def textfield_confirm_email_check(e):
+        email_format = r'^[a-zA-Z0-9._]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,}$'
+
+        if textfield_confirm_email.value == "":
+            textfield_confirm_email.error_text = "Campo obrigatorio"
+            return
+        
+        if not re.match(email_format, textfield_confirm_email.value):
+            textfield_confirm_email.error_text = "Email inválido"
+            return
+        
+        if textfield_confirm_email.value != textfield_email_sign.value:
+            textfield_confirm_email.error_text = "Emails não coincidem"
+            return
+        textfield_confirm_email.error_text = ""
+
+    # Valida o campo "textfield_password_sign"
+    def textfield_password_sign_check(e):
+        password_format = r'[a-zA-Z0-9]{6,}'
+
+        if textfield_password_sign.value == "":
+            textfield_password_sign.error_text = "Campo obrigatorio"
+            return
+        
+        if not re.match(password_format, textfield_password_sign.value):
+            textfield_password_sign.error_text = "Mínimo de 6 caracteres: a-z, A-Z, 9-0"
+            return
+        textfield_password_sign.error_text = ""
+
+    # Valida o campo "textfield_confirm_password"
+    def textfield_confirm_password_check(e):
+        password_format = r'[a-zA-Z0-9]{6,}'
+
+        if textfield_confirm_password.value == "":
+            textfield_confirm_password.error_text = "Campo obrigatorio"
+            return
+        
+        if not re.match(password_format, textfield_confirm_password.value):
+            textfield_confirm_password.error_text = "Mínimo de 6 caracteres: a-z, A-Z, 9-0"
+            return
+        
+        if textfield_confirm_password.value != textfield_password_sign.value:
+            textfield_confirm_password.error_text = "Senhas não coincidem"
+            return
+        textfield_confirm_password.error_text = ""
+
+    # Pagina de Log in
+    textfield_email = ft.TextField(
+        label = "Email",
+        on_blur = textfield_email_check,
+        error_text = "",
+        width = 300
     )
 
-    # Inserindo elementos na página
-    main_page = ft.Container(
-        expand=False,
-        content=ft.Column(
+    textfield_password = ft.TextField(
+        label = "Senha",
+        password = True,
+        can_reveal_password = True,
+        on_blur = textfield_password_check,
+        error_text = "",
+        width = 300)
+
+    # Pagina de Cadastro
+    textfield_email_sign = ft.TextField(
+        label = "Email",
+        on_blur = textfield_email_sign_check,
+        error_text = "",
+        width = 300
+    )
+
+    textfield_confirm_email = ft.TextField(
+        label = "Confirmar Email",
+        on_blur = textfield_confirm_email_check,
+        error_text = "",
+        width = 300
+    )
+
+    textfield_password_sign = ft.TextField(
+        label = "Senha",
+        password = True,
+        can_reveal_password = True,
+        on_blur = textfield_password_sign_check,
+        error_text = "",
+        width = 300
+    )
+
+    textfield_confirm_password = ft.TextField(
+        label = "Confirmar senha",
+        password = True,
+        can_reveal_password = True,
+        on_blur = textfield_confirm_password_check,
+        error_text = "",
+        width = 300
+    )
+
+    # Botões
+    log_in_button = ft.ElevatedButton(
+        text = "Entrar",
+        width = 100,
+        height = 40,
+        style = ft.ButtonStyle(
+            shape = ft.RoundedRectangleBorder(radius = 10),
+            overlay_color = ft.Colors.GREEN_400
+        ),
+        on_click = btn_log_in
+    )
+
+    sign_up_button = ft.ElevatedButton(
+        text = "Cadastrar-se",
+        width = 120,
+        height = 40,
+        style = ft.ButtonStyle(
+            shape = ft.RoundedRectangleBorder(radius = 10),
+            overlay_color = ft.Colors.GREEN_400
+        ),
+        on_click = btn_register
+    )
+
+    def return_to_log_in(e):
+        # Limpa os campos de texto e mensagens de erro
+        textfield_email_sign.value = ""
+        textfield_confirm_email.value = ""
+        textfield_password_sign.value = ""
+        textfield_confirm_password.value = ""
+        textfield_email_sign.error_text = ""
+        textfield_confirm_email.error_text = ""
+        textfield_password_sign.error_text = ""
+        textfield_confirm_password.error_text = ""
+        # Carrega a pagina de log in
+        page.clean()
+        page.add(log_in_layout)
+    
+    def return_to_sign_up(e):
+        # Limpa os campos de texto e mensagens de erro
+        textfield_email.value = ""
+        textfield_password.value = ""
+        textfield_email.error_text = ""
+        textfield_password.error_text = ""
+        # Carrega a pagina de cadastro
+        page.clean()
+        page.add(sign_up_layout)
+
+    # Hyperlinks
+    log_in_hyperlink = ft.TextButton(
+        text = "Entrar",
+        on_click = return_to_log_in
+    )
+
+    sign_up_hyperlink = ft.TextButton(
+        text = "Cadastrar-se",
+        on_click = return_to_sign_up
+    )
+
+    # Coloca os botões em uma linha
+    log_in_button_row = ft.Row(
+        controls = [
+            log_in_button,
+            sign_up_hyperlink
+        ],
+        alignment = ft.MainAxisAlignment.CENTER,
+        spacing = 10
+    )
+
+    sign_up_button_row = ft.Row(
+        controls = [
+            sign_up_button,
+            log_in_hyperlink
+        ],
+        alignment = ft.MainAxisAlignment.CENTER,
+        spacing = 10
+    )
+
+    # Carrega os elementos da pagina
+    # Pagina de log in
+    log_in_layout = ft.Container(
+        expand = False,
+        content = ft.Column(
+            alignment = ft.MainAxisAlignment.CENTER,
+            horizontal_alignment = ft.CrossAxisAlignment.CENTER,
             controls=[
-                header_stack,  # Stack com imagem e gradient_container
+                header_stack,
                 ft.Container(margin=ft.Margin(0, 30, 0, 0)),
-                textfield_email,
+                textfield_email,            
                 textfield_password,
                 ft.Container(margin=ft.Margin(0, 30, 0, 0)),
-                confirm_button,
-            ],
-            alignment=ft.MainAxisAlignment.CENTER,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-        ),
-        padding=20,
+                log_in_button_row
+            ]
+        )
     )
-    page.overlay.append(snack_bar)
-    page.add(main_page)
 
-ft.app(target=main, assets_dir="assets")
+    # Pagina de cadastro
+    sign_up_layout = ft.Container(
+        expand = False,
+        content = ft.Column(
+            alignment = ft.MainAxisAlignment.CENTER,
+            horizontal_alignment = ft.CrossAxisAlignment.CENTER,
+            controls=[
+                header_stack,
+                ft.Container(margin=ft.Margin(0, 30, 0, 0)),
+                textfield_email_sign,
+                textfield_confirm_email,            
+                textfield_password_sign,
+                textfield_confirm_password,
+                ft.Container(margin=ft.Margin(0, 30, 0, 0)),
+                sign_up_button_row
+            ]
+        )
+    )
+
+    # Carrega a pagina de login
+    page.add(log_in_layout)
+    page.overlay.append(snack_bar)
+
+ft.app(main)
