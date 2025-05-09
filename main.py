@@ -5,6 +5,7 @@ import re
 import requests
 import KEY
 import app
+import sqlite3
 
 API_KEY = KEY.firebase_key
 
@@ -20,6 +21,19 @@ def main(page: ft.Page):
     page.window.title_bar_hidden = False
     snack_bar = ft.SnackBar(content=ft.Text(""), open=False)
 
+    def init_db():
+        conn = sqlite3.connect("users.db")
+        cursor = conn.cursor()
+        cursor.execute("""
+                       CREATE TABLE IF NOT EXISTS users (
+                       email TEXT PRIMARY KEY,
+                       database_name TEXT
+                       )
+                   """)
+        conn.commit()
+        conn.close()
+
+    init_db()
     # Snackbar. Alerta de cadastro bem sucedido
     def snack_sucess():
             snack_bar.content = ft.Text("Cadastro realizado com sucesso!", weight=ft.FontWeight.BOLD)
@@ -138,28 +152,73 @@ def main(page: ft.Page):
                 "returnSecureToken": True
             }
             response = requests.post(url, json=payload)
-            response.raise_for_status()
 
-            data = response.json()
-            if "idToken" in data:
-                # Snackbar sucesso ao autenticar usuário
-                snack_bar.content = ft.Text("Autenticação bem sucedida!", weight=ft.FontWeight.BOLD)
-                snack_bar.bgcolor = ft.Colors.GREEN_400
-                snack_bar.duration = 1800
-                snack_bar.open = True
+            # Verificar resposta
+            if response.status_code == 200:
+                data = response.json()
+                
+                if "idToken" in data:
+                    conn = sqlite3.connect("users.db")
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT database_name FROM users WHERE email = ?", (valid_email,))
+                    result = cursor.fetchone()
 
-                # Limpa os campos
-                textfield_email.value = ""
-                textfield_password.value = ""
+                    if result is None:
+                        # Cria a database do usuário caso não exista
+                        database_name = f"db_{valid_email.replace('@', '_').replace('.', '_')}.db"
+                        cursor.execute("INSERT INTO users (email, database_name) VALUES (?, ?)", (valid_email, database_name))
+                        conn.commit()
+                        
+                        user_conn = sqlite3.connect(database_name)
+                        user_cursor = user_conn.cursor()
+                        user_cursor.execute("""
+                                        CREATE TABLE products (id_prod INTEGER PRIMARY KEY AUTOINCREMENT, category TEXT, product TEXT, quantity INTEGER)
+                                        """)
+                        user_cursor.execute("""
+                                            CREATE TABLE quantity_history (
+                                                id_hist INTEGER PRIMARY KEY AUTOINCREMENT,
+                                                prod_hist INTEGER,
+                                                quantity_before INTEGER,
+                                                quantity_after INTEGER,
+                                                data_modify TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                                FOREIGN KEY (prod_hist) REFERENCES products(id_prod)
+                                                )
+                                        """)
+                        user_cursor.execute("""
+                                            CREATE TRIGGER trg_update_quantity
+                                            AFTER UPDATE OF quantity ON products
+                                            FOR EACH ROW
+                                            WHEN OLD.quantity != NEW.quantity
+                                            BEGIN
+                                                INSERT INTO quantity_history (prod_hist, quantity_before, quantity_after, data_modify)
+                                                VALUES (OLD.id_prod, OLD.quantity, NEW.quantity, CURRENT_TIMESTAMP);
+                                            END
+                                        """)
+                        user_conn.commit()
+                        user_conn.close()
+                    else:
+                        database_name = result[0]
+                        conn.close()
+                        print(result)
 
-                page.clean()
-                app.main(page)
-                page.update()
+                    # Limpa os campos de texto
+                    textfield_email.value = ""
+                    textfield_password.value = ""
+
+                    # Carrega a pagina do app
+                    page.clean()
+                    app.main(page, database_name)
+                    page.update()
+                else:
+                    snack_error()
             else:
-                raise Exception()
-            
-        except Exception as ex:
+                error_message = response.json().get("error",{}).get("message", "Erro desconhecido")
+                print(f"Erro ao autenticar: {error_message}")
+                snack_error()
+
+        except requests.RequestException as ex:
             snack_error()
+           
 
 
     # Titulo com icone animado
