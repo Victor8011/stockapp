@@ -6,7 +6,8 @@ import sqlite3
 import os
 from fpdf import FPDF
 
-def main(page: ft.Page):
+def main(page: ft.Page, database_name: str):
+    user_db = database_name
     page.scroll = "adaptive"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
@@ -137,7 +138,7 @@ def main(page: ft.Page):
         page.update()
 
     def join_tables(filter="all", start_date=None, end_date=None):
-        con = sqlite3.connect("tb_products.db")
+        con = sqlite3.connect(user_db)
         cursor = con.cursor()
 
         query = """
