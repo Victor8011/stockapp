@@ -8,7 +8,9 @@ import addQuantityPage
 import appVersionUpdate
 import sqlite3
 
-def main(page: ft.Page):
+def main(page: ft.Page, database_name):
+
+    user_db = database_name
     # Configurações iniciais da página
     page.scroll = "adaptive"
     page.title = "Stock App"
@@ -199,7 +201,7 @@ def main(page: ft.Page):
 
     # Função para buscar dados do banco de dados
     def get_data(search_text="", sort_column=None, sort_ascending=True):
-        conexao = sqlite3.connect("tb_products.db")
+        conexao = sqlite3.connect(user_db)
         cursor = conexao.cursor()
         
         query = "SELECT category, product, quantity FROM products"
@@ -311,7 +313,7 @@ def main(page: ft.Page):
         category = item_data["category"]
         product = item_data["product"]
         
-        conexao = sqlite3.connect("tb_products.db")
+        conexao = sqlite3.connect(user_db)
         cursor = conexao.cursor()
         cursor.execute("DELETE FROM products WHERE category = ? AND product = ?", (category, product))
         conexao.commit()
@@ -343,7 +345,7 @@ def main(page: ft.Page):
 
         page.clean()
         page.add(topBar())
-        add_quantity = addQuantityPage.AddQuantity(page, data_table, category, product)
+        add_quantity = addQuantityPage.AddQuantity(page, data_table, category, product, database_name)
         add_quantity.addMainPage()
 
     # Funções dos botões
@@ -352,7 +354,7 @@ def main(page: ft.Page):
         page.clean()
         page.add(topBar())
         importlib.reload(addPage)
-        add_page = addPage.AddPage(page, data_table)
+        add_page = addPage.AddPage(page, data_table, database_name)
         add_page.addMainPage()
 
     def update_used(e):
@@ -360,13 +362,13 @@ def main(page: ft.Page):
         page.clean()
         page.add(topBar())
         importlib.reload(usedPage)
-        used_page = usedPage.UsedPage(page, data_table)
+        used_page = usedPage.UsedPage(page, data_table, database_name)
         used_page.addMainPage()
         
     def update_analytics(e):
         page.clean()
         page.add(topBar())
-        analytics = advancedFilters.main(page)
+        analytics = advancedFilters.main(page, database_name)
         analytics
 
     def update_home(e):
