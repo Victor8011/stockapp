@@ -2,13 +2,14 @@ import flet as ft
 import sqlite3
 
 class AddQuantity:
-    def __init__(self, page: ft.Page, data_table: ft.DataTable, category: str, product: str):
+    def __init__(self, page: ft.Page, data_table: ft.DataTable, category: str, product: str, database_name: str):
         page.vertical_alignment = ft.MainAxisAlignment.START
         page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
         self.page = page
         self.data_table = data_table    # Referência à DataTable para atualização
         self.category = category        # Categoria do produto selecionado
         self.product = product          # Nome do produto selecionado
+        self.user_db = database_name
         self.quantity_field = ft.TextField(
             hint_text="Acrescentar quantidade",
             expand=False,
@@ -39,7 +40,7 @@ class AddQuantity:
     # resgata a quantidade atual de produtos no banco de dados
     def get_current_quantity(self):
         """Obtém a quantidade atual do produto no banco de dados."""
-        conexao = sqlite3.connect("tb_products.db")
+        conexao = sqlite3.connect(self.user_db)
         cursor = conexao.cursor()
         cursor.execute(
             "SELECT quantity FROM products WHERE category = ? AND product = ?",
@@ -70,7 +71,7 @@ class AddQuantity:
             return
         
         # Atualizar a quantidade no banco de dados
-        conexao = sqlite3.connect("tb_products.db")
+        conexao = sqlite3.connect(self.user_db)
         cursor = conexao.cursor()
         cursor.execute(
             "UPDATE products SET quantity = quantity + ? WHERE category = ? AND product = ?",
@@ -98,7 +99,7 @@ class AddQuantity:
     def update_data_table(self):
         """Atualiza a DataTable com os dados mais recentes do banco de dados."""
         self.data_table.rows.clear()
-        conexao = sqlite3.connect("tb_products.db")
+        conexao = sqlite3.connect(self.user_db)
         cursor = conexao.cursor()
         cursor.execute("SELECT category, product, quantity FROM products")
         data_db = cursor.fetchall()
