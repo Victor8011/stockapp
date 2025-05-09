@@ -2,9 +2,10 @@ import flet as ft
 import sqlite3
 
 class AddPage:
-    def __init__(self, page: ft.Page, data_table: ft.DataTable):
+    def __init__(self, page: ft.Page, data_table: ft.DataTable, database_name: str):
         self.page = page
         self.data_table = data_table  # Referência à DataTable para atualização
+        self.user_db = database_name
         self.dropdown = self.categories_dropdown()
         self.new_category_field = None  # Referência ao TextField para categoria
         self.new_product_field = None   # Referência ao TextField para produto
@@ -20,7 +21,7 @@ class AddPage:
 
     def get_categories(self):
         """Obtém as categorias existentes do banco de dados."""
-        conexao = sqlite3.connect("tb_products.db")
+        conexao = sqlite3.connect(self.user_db)
         cursor = conexao.cursor()
         cursor.execute("SELECT DISTINCT category FROM products")
         categories = [row[0] for row in cursor.fetchall()]
@@ -190,7 +191,7 @@ class AddPage:
             return
 
         # Verifica se o produto já existe na categoria selecionada no banco
-        conexao = sqlite3.connect("tb_products.db")
+        conexao = sqlite3.connect(self.user_db)
         cursor = conexao.cursor()
         cursor.execute(
             "SELECT product FROM products WHERE category = ? AND product = ?",
@@ -228,7 +229,7 @@ class AddPage:
     def update_data_table(self):
         """Atualiza a DataTable com os dados mais recentes do banco de dados."""
         self.data_table.rows.clear()
-        conexao = sqlite3.connect("tb_products.db")
+        conexao = sqlite3.connect(self.user_db)
         cursor = conexao.cursor()
         cursor.execute("SELECT category, product, quantity FROM products")
         dados = cursor.fetchall()
