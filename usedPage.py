@@ -2,7 +2,8 @@ import flet as ft
 import sqlite3
 
 class UsedPage:
-    def __init__(self, page: ft.Page, data_table: ft.DataTable):
+    def __init__(self, page: ft.Page, data_table: ft.DataTable, database_name: str):
+        self.user_db = database_name
         self.page = page
         self.data_table = data_table  # Referência à DataTable para atualização
         self.dropdown_category = self.categories_dropdown()
@@ -19,7 +20,7 @@ class UsedPage:
 
     def get_categories(self):
         """Obtém as categorias existentes do banco de dados."""
-        conexao = sqlite3.connect("tb_products.db")
+        conexao = sqlite3.connect(self.user_db)
         cursor = conexao.cursor()
         cursor.execute("SELECT DISTINCT category FROM products")
         categories = [row[0] for row in cursor.fetchall()]
@@ -28,7 +29,7 @@ class UsedPage:
 
     def get_products_by_category(self, category):
         """Obtém os produtos de uma categoria específica do banco de dados."""
-        conexao = sqlite3.connect("tb_products.db")
+        conexao = sqlite3.connect(self.user_db)
         cursor = conexao.cursor()
         cursor.execute("SELECT product FROM products WHERE category = ?", (category,))
         products = [row[0] for row in cursor.fetchall()]
@@ -37,7 +38,7 @@ class UsedPage:
 
     def get_quantity(self, category, product):
         """Obtém a quantidade atual de um produto no banco de dados."""
-        conexao = sqlite3.connect("tb_products.db")
+        conexao = sqlite3.connect(self.user_db)
         cursor = conexao.cursor()
         cursor.execute(
             "SELECT quantity FROM products WHERE category = ? AND product = ?",
@@ -179,7 +180,7 @@ class UsedPage:
             return
 
         # Atualiza a quantidade no banco de dados
-        conexao = sqlite3.connect("tb_products.db")
+        conexao = sqlite3.connect(self.user_db)
         cursor = conexao.cursor()
         cursor.execute(
             "UPDATE products SET quantity = quantity - ? WHERE category = ? AND product = ?",
@@ -204,7 +205,7 @@ class UsedPage:
     def update_data_table(self):
         """Atualiza a DataTable com os dados mais recentes do banco de dados."""
         self.data_table.rows.clear()
-        conexao = sqlite3.connect("tb_products.db")
+        conexao = sqlite3.connect(self.user_db)
         cursor = conexao.cursor()
         cursor.execute("SELECT category, product, quantity FROM products")
         dados = cursor.fetchall()
