@@ -199,7 +199,6 @@ def main(page: ft.Page):
                     else:
                         database_name = result[0]
                         conn.close()
-                        print(result)
 
                     # Limpa os campos de texto
                     textfield_email.value = ""
